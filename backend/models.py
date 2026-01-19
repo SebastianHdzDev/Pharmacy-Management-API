@@ -7,13 +7,13 @@ from enum import Enum
 
 class Sucursal(SQLModel, table=True):
     __table_args__ = (
-        CheckConstraint("numSucursal > 0", name="chk_numSucursal_mayorcero"),
+        CheckConstraint('num_sucursal > 0', name="chk_num_sucursal_mayorcero"),
         CheckConstraint("telefono ~ '^[0-9]{10}$'", name="chk_telefono_sucursal"),
     )
     idSucursal: Optional[int] = Field(default=None, primary_key=True)
     direccion: str = Field(max_length=150, nullable=False)
     telefono: str = Field(max_length=10, nullable=False)
-    numSucursal: int = Field(unique=True, gt=0, nullable=False)
+    num_sucursal: int = Field(unique=True, gt=0, nullable=False)
     empleados: List["Usuario"] = Relationship(back_populates="sucursal_obj")
     lista_pedidos: List["Compra"] = Relationship(back_populates="sucursal_obj")
     lista_inventarios:List["Tabla_Inventario"]=Relationship(back_populates="sucursal_obj")
@@ -54,7 +54,7 @@ class Proveedor(SQLModel, table=True):
 
 class Compra(SQLModel, table=True):
     idCompra: Optional[int] = Field(default=None, primary_key=True)
-    monto: Decimal = Field(sa_column=Column(DECIMAL(10,2)), nullable=False)
+    monto: Decimal = Field(sa_column=Column(DECIMAL(10,2), nullable=False))
     fechaCompra: date = Field(default_factory=date.today, nullable=False)
     idProveedor: int = Field(foreign_key="proveedor.idProveedor") 
     idSucursal: int = Field(foreign_key="sucursal.idSucursal")
@@ -75,16 +75,16 @@ class Medicamento(SQLModel, table=True):
 
 class Tabla_Inventario(SQLModel, table=True):
     __table_args__=(
-        CheckConstraint("precioVenta > 0", name="chk_inv_precioVenta"),
-        CheckConstraint("costoIndividual > 0", name="chk_inv_costo"),
+        CheckConstraint('precio_venta > 0', name="chk_inv_precio_venta"),
+        CheckConstraint('costo_individual > 0', name="chk_inv_costo"),
         CheckConstraint("cantidad >= 0", name="chk_inv_cantidad"),
     )
     idInventario: Optional[int] = Field(default=None, primary_key=True)
     lote: str = Field(max_length=20, nullable=False)
     fechaCaducidad: date = Field(nullable=False)
-    precioVenta: Decimal = Field(sa_column=Column(DECIMAL(10,2)), nullable=False)
+    precio_venta: Decimal = Field(sa_column=Column(DECIMAL(10,2), nullable=False))
     cantidad: int = Field(ge=0,nullable=False)
-    costoIndividual: Decimal = Field(sa_column=Column(DECIMAL(10,2)), nullable=False)
+    costo_individual: Decimal = Field(sa_column=Column(DECIMAL(10,2), nullable=False))
     idSucursal: int = Field(foreign_key="sucursal.idSucursal")
     idCompra: int = Field(foreign_key="compra.idCompra") 
     idMedicamento: int = Field(foreign_key="medicamento.idMedicamento")
@@ -102,7 +102,7 @@ class Ticket(SQLModel, table=True):
         CheckConstraint("estatus IN ('ACTIVO', 'CANCELADO')", name="chk_estatus_ticket"),
     )
     idTicket: Optional[int] = Field(default=None, primary_key=True)
-    total: Decimal = Field(sa_column=Column(DECIMAL(10,2)), nullable=False)
+    total: Decimal = Field(sa_column=Column(DECIMAL(10,2), nullable=False))
     fecha: date = Field(default_factory=date.today, nullable=False)
     estatus: str = Field(default=TicketEnum.ACTIVO, max_length=10)
     cliente: Optional[str] = Field(default=None, max_length=50)
@@ -112,11 +112,11 @@ class Ticket(SQLModel, table=True):
 
 class Detalle_Venta(SQLModel, table=True):
     __table_args__=(
-        CheckConstraint("precioFinal > 0 ",name="chk_det_precioFinal"),
+        CheckConstraint('precio_final > 0 ',name="chk_det_precio_final"),
         CheckConstraint("cantidad > 0",name="chk_det_cantidad"),
     )
     idDetalleVenta: Optional[int] = Field(default=None, primary_key=True)
-    precioFinal: Decimal = Field(sa_column=Column(DECIMAL(10,2)), gt=0, nullable=False)
+    precio_final: Decimal = Field(sa_column=Column(DECIMAL(10,2), nullable=False), gt=0)
     cantidad: int = Field(gt=0, nullable=False)
     idInventario: int = Field(foreign_key="tabla_inventario.idInventario")
     idTicket: int = Field(foreign_key="ticket.idTicket")
