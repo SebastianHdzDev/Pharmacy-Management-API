@@ -1,15 +1,21 @@
-# --- Ignore (Backend) ---
+# Ignore (Backend)
 backend/venv/
 backend/__pycache__/
 backend/*.pyc
 backend/.env
 
-# --- Ignore Node (Frontend) ---
+# Ignore Node (Frontend)
 frontend/node_modules/
 frontend/dist/
 frontend/.env
 
-# --- Ignorar archivos del sistema ---
+# Ignorar archivos del sistema
 .DS_Storevenv/
 __pycache__/
 *.pyc
+
+# Ignorar archivos de vscode
+.vscode/
+
+# Ignorar variables de entorno
+.env
