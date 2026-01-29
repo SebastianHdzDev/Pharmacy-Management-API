@@ -1,9 +1,10 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select
 from typing import Annotated, List
-from ..db import get_session
-from ..models import Sucursal, Usuario, Asistencia, Compra, Ticket, Tabla_Inventario
-from ..schemas import *
+
+from backend.db import get_session
+from backend.models import Sucursal, Usuario, Asistencia, Compra, Ticket, Tabla_Inventario
+from backend.schemas import * 
 
 router = APIRouter()
 
