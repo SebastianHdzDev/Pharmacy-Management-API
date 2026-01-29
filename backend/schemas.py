@@ -58,6 +58,10 @@ class AsistenciaRead(AsistenciaBase):
     idAsistencia : int
     idUsuario: int #Ver que usuario registro la asistencia
 
+class AsistenciaUpdate(SQLModel):
+    horaSalida: datetime | None = None
+    horaLlegada: datetime | None = None
+
 ###############   PROVEEDOR    ###############
 class ProveedorBase(SQLModel):
     nombre: str = Field(max_length=100)
