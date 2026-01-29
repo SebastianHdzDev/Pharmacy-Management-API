@@ -1,9 +1,11 @@
 from fastapi import FastAPI, HTTPException, Path, Query, Depends
-from sqlmodel import Session
-from models import *
-from db import init_db, get_session
+from sqlmodel import Session, select
+from .models import *
+from .schemas import *
+from .db import init_db, get_session
 from contextlib import asynccontextmanager
-from typing import Annotated
+from typing import Annotated, List
+from .routers import sucursales, usuarios, medicamentos, proveedores, compras, inventarios, tickets, detalles_venta, facturas
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
@@ -12,34 +14,20 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(lifespan=lifespan)
 
-@app.get("/")
-def read_root():
-    return {"mensaje": "Sistema de Farmacia Activo"}
+app.include_router(sucursales.router, tags=["Sucursales"])
 
+app.include_router(usuarios.router, tags=["Usuarios"])
 
-@app.get("/sucursales/{sucursal_id}")
-async def sucursal(
-    sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
-    session: Session = Depends(get_session) #ejecución implicita de with Session(engine)
-) -> Sucursal:
-    sucursal = session.get(Sucursal, sucursal_id) #Tabla, parametro{id}
-    if sucursal is None:
-        raise HTTPException(status_code=404, detail="SUCURSAL NO ENCONTRADA ")
-    return sucursal #retornar si se encontro 
+app.include_router(medicamentos.router, tags=["Medicamentos"])
 
-@app.post("/sucursales")
-async def crear_sucursal(
-    info_sucursal: Sucursal,
-    session: Session=Depends(get_session)
-) -> Sucursal:
-    sucursal = Sucursal.model_validate(info_sucursal) #valida todo el objeto
+app.include_router(proveedores.router, tags=["Proveedores"])
 
-    session.add(sucursal) #añade solo en memoria (no en la bd)
+app.include_router(compras.router, tags=["Compras"])
 
-    session.commit() #commit a tabla en la bd, usa el engine para almacenar en la bd
-    session.refresh(sucursal) #refresh datos
-    return sucursal
-#EL objeto session usa el engine, pero se usa para las operaciones con la bd
-#Por cada peticion se crea una nueva sesion y cuando se termina, se debe
-#cerrar la sesion 
+app.include_router(inventarios.router, tags=["Inventarios"])
 
+app.include_router(tickets.router, tags=["Tickets"])
+
+app.include_router(detalles_venta.router, tags=["Detalles de Venta"])
+
+app.include_router(facturas.router, tags=["Facturas"])
