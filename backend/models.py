@@ -3,7 +3,7 @@ from typing import Optional, List
 from sqlalchemy import CheckConstraint, Column, DECIMAL, text, Boolean, Enum as SAEnum
 from datetime import date, datetime
 from decimal import Decimal
-from schemas import *
+from backend.schemas import *
 
 class Sucursal(SucursalBase, table=True):
     __table_args__ = (
