@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select
 from typing import Annotated, List
-
 from backend.db import get_session
 from backend.models import Proveedor, Compra
 from backend.schemas import * 
+from backend.auth import get_current_active_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.get("/proveedores", response_model=List[ProveedorRead])
 async def obtener_proveedores(

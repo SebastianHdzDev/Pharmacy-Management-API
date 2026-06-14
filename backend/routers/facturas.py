@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select
 from typing import Annotated, List
-
 from backend.db import get_session
 from backend.models import Factura, Ticket
 from backend.schemas import * 
+from backend.auth import get_current_active_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.get("/facturas", response_model=List[FacturaRead])
 async def obtener_facturas(
