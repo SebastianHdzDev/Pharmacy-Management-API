@@ -5,14 +5,16 @@ from .schemas import *
 from .db import init_db, get_session
 from contextlib import asynccontextmanager
 from typing import Annotated, List
-from .routers import sucursales, usuarios, medicamentos, proveedores, compras, inventarios, tickets, detalles_venta, facturas
+from .routers import sucursales, usuarios, medicamentos, proveedores, compras, inventarios, tickets, detalles_venta, facturas, auth
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     init_db()
     yield
 
-app = FastAPI(lifespan=lifespan)
+app = FastAPI(lifespan=lifespan, title="Sistema de Farmacia")
+
+app.include_router(auth.router, tags=["Autenticacion"])
 
 app.include_router(sucursales.router, tags=["Sucursales"])
 
