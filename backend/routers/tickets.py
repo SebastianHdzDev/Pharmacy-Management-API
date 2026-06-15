@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select
 from typing import Annotated, List
-
 from backend.db import get_session
-from backend.models import Sucursal, Detalle_Venta, Factura, Ticket
+from backend.models import Sucursal, Detalle_Venta, Factura, Ticket, Tabla_Inventario
 from backend.schemas import * 
+from backend.auth import get_current_active_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.get("/tickets", response_model=List[TicketRead])
 async def obtener_tickets(session:Session = Depends(get_session))->List[TicketRead]:
@@ -73,7 +73,7 @@ async def obtener_detalles_venta_ticket(
     return detalles.all()
 
 
-@router.get("/ticket/{ticket_id}/facturas", response_model=FacturaRead)
+@router.get("/tickets/{ticket_id}/facturas", response_model=FacturaRead)
 async def obtener_factura_ticket(
     ticket_id : Annotated[int, Path(title="ID del ticket")],
     session: Session = Depends(get_session)
