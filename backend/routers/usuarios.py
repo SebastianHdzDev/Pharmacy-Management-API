@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select
 from typing import Annotated, List
-
 from backend.db import get_session
 from backend.models import Sucursal, Usuario, Asistencia
 from backend.schemas import * 
+from backend.auth import *
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.post("/usuarios", response_model=UsuarioRead)
 async def crear_usuario(
@@ -16,7 +16,12 @@ async def crear_usuario(
     sucursal = session.get(Sucursal, info_usuario.idSucursal)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
+    usuario = session.exec(select(Usuario).where(Usuario.alias==info_usuario.alias))
+    if usuario.first():
+        raise HTTPException(status_code=400, detail="USUARIO YA CREADO (YA EXISTE UNO CON ESE ALIAS)")
+    hashed_passwd = get_pwd_hash(info_usuario.passwd)
     usuario = Usuario.model_validate(info_usuario)
+    usuario.passwd = hashed_passwd
     session.add(usuario)
     session.commit()
     session.refresh(usuario)
@@ -49,7 +54,7 @@ async def actualizar_usuario(
     session.refresh(usuario)
     return usuario
 
-@router.get("/usuario/{usuario_id}/asistencias", response_model=List[AsistenciaRead])
+@router.get("/usuarios/{usuario_id}/asistencias", response_model=List[AsistenciaRead])
 async def obtener_asistencias_usuario(
     usuario_id: Annotated[int, Path(title="ID del usuario")],
     session : Session = Depends(get_session)
@@ -58,3 +63,19 @@ async def obtener_asistencias_usuario(
     if not usuario:
         raise HTTPException(status_code=404, detail="USUARIO NO ENCONTRADO")
     return session.exec(select(Asistencia).where(Asistencia.idUsuario==usuario_id)).all()
+
+
+@router.delete("/usuarios/{usuario_id}")
+async def eliminar_usuario(
+    usuario_id: int,
+    current_user: Usuario = Depends(get_current_active_user), 
+    session: Session = Depends(get_session)
+):
+    statement = select(Usuario).where(Usuario.idUsuario==usuario_id)
+    usuario = session.exec(statement).first()
+    if not usuario:
+        raise HTTPException(status_code=404, detail="Usuario no encontrado")
+    if usuario.id == current_user.idUsuario:
+        raise HTTPException(status_code=404, detail="¡NO PUEDES ELIMINARTE A TI MISMO!")
+    session.delete(usuario)
+    session.commit()
