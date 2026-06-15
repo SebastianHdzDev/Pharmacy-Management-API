@@ -209,3 +209,16 @@ class FacturaUpdate(SQLModel):
     folioFiscal: str|None = None
     usoCFDI: str|None = None
     domicilioFiscal: str|None = None
+
+###############   VENTAS    ###############
+# Paquete individual de un medicamento
+class ItemCarrito(SQLModel):
+    idInventario: int
+    cantidad: int
+    precio_final: Decimal
+
+# Paquete completo que manda el frontend
+class VentaRequest(SQLModel):
+    cliente: str | None = None
+    metodo_pago: str 
+    carrito: list[ItemCarrito]
