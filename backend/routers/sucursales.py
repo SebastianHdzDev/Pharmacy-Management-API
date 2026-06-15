@@ -1,12 +1,13 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
-from sqlmodel import Session, select
+from sqlmodel import Session, select, func
 from typing import Annotated, List
-
 from backend.db import get_session
 from backend.models import Sucursal, Usuario, Asistencia, Compra, Ticket, Tabla_Inventario
 from backend.schemas import * 
+from backend.auth import get_current_active_user
+from datetime import date
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.get("/sucursales", response_model=List[Sucursal])
 async def obtener_sucursales(session:Session=Depends(get_session))->List[Sucursal]:
@@ -101,7 +102,7 @@ async def obtener_usuarios_sucursal(
     return usuarios
 
 
-@router.get("/sucursales/{sucursal_id}/asistencias/", response_model=List[AsistenciaRead])
+@router.get("/sucursales/{sucursal_id}/asistencias", response_model=List[AsistenciaRead])
 async def obtener_asistencias_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     session : Session = Depends(get_session)
@@ -151,3 +152,37 @@ async def obtener_tickets_sucursal(
     statement = select(Ticket).where(Ticket.idSucursal==sucursal_id)
     tickets = session.exec(statement)
     return tickets.all()
+
+@router.get('/{sucursal_id}/corte-caja')
+async def obtener_corte_caja(
+    sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    fecha: date,
+    session: Session = Depends(get_session)
+):
+    sucursal = session.get(Sucursal, sucursal_id)
+    if not sucursal:
+        raise HTTPException(status_code=404, detail="SUCURSAL NO ENCONTRADA")
+    
+    # Conseguir tickets de la sucursal, con la fecha de hoy y activos
+    statement = select(
+        func.count(Ticket.idTicket), #contar
+        func.sum(Ticket.total)
+    ).where(
+        Ticket.idSucursal == sucursal_id, 
+        Ticket.fecha == fecha, 
+        Ticket.estatus == 'ACTIVO'
+    )
+    # obtener tupla (cantidad, suma)
+    resultados = session.exec(statement).fetchone()
+
+    # Aplicar or por si devuelve None
+    # resultados[0] = count 
+    cantidad_tickets = resultados[0] or 0
+
+    # resultados[1] = sum
+    corte_caja = resultados[1] or 0.0
+
+    return {
+        "fecha": fecha,
+        "cantidad_de_tickets": cantidad_tickets,
+        "corte_caja": corte_caja}
