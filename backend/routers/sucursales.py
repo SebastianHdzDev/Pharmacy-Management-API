@@ -1,11 +1,11 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
+from fastapi import APIRouter, HTTPException, Path, Depends, Query
 from sqlmodel import Session, select, func
 from typing import Annotated, List
 from backend.db import get_session
 from backend.models import Sucursal, Usuario, Asistencia, Compra, Ticket, Tabla_Inventario
 from backend.schemas import * 
 from backend.auth import get_current_active_user
-from datetime import date
+from datetime import date, timedelta
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
@@ -186,3 +186,26 @@ async def obtener_corte_caja(
         "fecha": fecha,
         "cantidad_de_tickets": cantidad_tickets,
         "corte_caja": corte_caja}
+
+
+@router.get("/{sucursal_id}/inventarios/", response_model=List[Tabla_Inventario])
+async def obtener_inventario_stock_bajo(
+    sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    filtro: Optional[str] = Query(None, description="Opciones válidas: 'stock_bajo', 'por_caducar'"),
+    session: Session = Depends(get_session)
+) -> List[Tabla_Inventario]:
+    statement = select(Tabla_Inventario).where(Tabla_Inventario.idSucursal == sucursal_id)
+
+    if filtro == "stock_bajo":
+        statement = statement.where(Tabla_Inventario.cantidad <= 10)
+    elif filtro== "por_caducar":
+        # Proximos a 3 meses
+        limite_caducidad = date.today() + timedelta(days=90)
+        statement = statement.where(Tabla_Inventario.fechaCaducidad <= limite_caducidad)
+
+        # Agregar solo las que todavia no han expirado
+        statement = statement.where(Tabla_Inventario.fechaCaducidad >= date.today())
+    elif filtro is not None:
+        # Cualquier otra cosa ingresada en el filtro genera una excepcion
+        raise HTTPException(status_code=400, detail="Filtro no válido")
+    return session.exec(statement).all()
