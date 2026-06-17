@@ -1,12 +1,12 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
-from sqlmodel import Session, select
+from sqlmodel import Session, select, or_  
 from typing import Annotated, List
-
 from backend.db import get_session
 from backend.models import Medicamento
 from backend.schemas import * 
+from backend.auth import get_current_active_user
 
-router = APIRouter()
+router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.post("/medicamentos", response_model=MedicamentoRead)
 async def crear_medicamento(
@@ -66,3 +66,43 @@ async def eliminar_medicamento(
         raise HTTPException(status_code=404, detail="MEDICAMENTO NO ENCONTRADO")
     session.delete(medicamento)
     session.commit()
+
+
+@router.get("/", response_model=List[MedicamentoRead])
+async def buscar_medicamentos(
+    nombre: Optional[str],
+    dosis: Optional[str],
+    viaAdministracion: Optional[str],
+    laboratorio: Optional[str],
+    tipoMedicamento: Optional[str],
+    usoTerapeutico: Optional[str],
+    requiereReceta: Optional[bool],
+    session: Session = Depends(get_session)
+) -> List[MedicamentoRead]:
+    statement = select(Medicamento)
+
+    if nombre:
+        statement = statement.where(Medicamento.nombre.ilike(f"%{nombre}%"))
+    
+    if dosis:
+        statement = statement.where(Medicamento.dosis.ilike(f"%{dosis}%"))
+    
+    if viaAdministracion:
+        statement = statement.where(Medicamento.viaAdministracion.ilike(f"%{viaAdministracion}%"))
+
+    if laboratorio:
+        statement = statement.where(Medicamento.laboratorio.ilike(f"%{laboratorio}%"))
+
+    if tipoMedicamento:
+        statement = statement.where(Medicamento.tipoMedicamento.ilike(f"%{tipoMedicamento}%"))
+
+    if usoTerapeutico:
+        statement = statement.where(Medicamento.usoTerapeutico.ilike(f"%{usoTerapeutico}%"))
+
+    if requiereReceta is not None:
+        statement = statement.where(Medicamento.requiereReceta == requiereReceta)
+
+    # ejecuta la consulta con todos los where indicados y dependiendo de parametros
+    resultados = session.exec(statement)
+    
+    return resultados.all()
