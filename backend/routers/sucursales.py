@@ -189,7 +189,7 @@ async def obtener_corte_caja(
 
 
 @router.get("/{sucursal_id}/inventarios/", response_model=List[Tabla_Inventario])
-async def obtener_inventario_stock_bajo(
+async def obtener_inventario_por_filtro(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     filtro: Optional[str] = Query(None, description="Opciones válidas: 'stock_bajo', 'por_caducar'"),
     session: Session = Depends(get_session)
