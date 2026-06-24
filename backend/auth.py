@@ -4,7 +4,7 @@ from typing import Optional
 import jwt 
 from fastapi.security import OAuth2PasswordBearer
 from pydantic import BaseModel
-from backend.models import Usuario
+from backend.models import Usuario, RolEnum
 from passlib.context import CryptContext
 from .db import get_session
 from sqlmodel import Session, select
@@ -91,4 +91,11 @@ async def get_current_active_user(current_user: Usuario = Depends(get_current_us
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Usuario Inactivo",
                 headers={"WWW-Authenticate":"Bearer"})
+    return current_user
+
+
+def verify_admin(current_user: Usuario = Depends(get_current_user)):
+    if current_user.rol != RolEnum.ADMIN:
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN,
+                detail="Solo administradores pueden realizar esta operacion.")
     return current_user
