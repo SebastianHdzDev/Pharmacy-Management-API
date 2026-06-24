@@ -6,6 +6,7 @@ from backend.db import get_session
 from backend.models import Usuario, Detalle_Venta, Ticket
 from backend.schemas import * 
 from backend.auth import get_current_active_user
+from datetime import timedelta, date
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
@@ -38,6 +39,12 @@ async def registrarVenta(
                                 detail=f"Stock insuficiente en lote {inventario.lote}. "
                                        f"Disponible: {inventario.cantidad}, Solicitado: {detalle.cantidad}")
         
+        # Verificar fecha de caducidad (no vender medicamentos caducados)
+        if inventario.fechaCaducidad < date.today():
+            raise HTTPException(status_code=400, 
+                                detail="No se pueden vender medicamentos caducos."
+                                    f"Caducidad inventario {inventario.fechaCaducidad}, Fecha hoy: {datetime.today()}")
+
         # Actualizar inventario y calcular total
         inventario.cantidad -= detalle.cantidad
         session.add(inventario)
@@ -70,6 +77,12 @@ async def realizar_devolucion(
         raise HTTPException(status_code=404, detail="TICKET NO ENCONTRADO")
     if ticket.estatus == "CANCELADO":
         raise HTTPException(status_code=400, detail="EL PROCESO YA NO ESTA DISPONIBLE PARA ESTE TICKET")
+    
+    # Verificar si ticket tiene menos de 24 horas
+    diferencia_dias = date.today() - ticket.fecha
+    if diferencia_dias > timedelta(days=1):
+        raise HTTPException(status_code=400, detail="Solo se aceptan devoluciones dentro de las primeras 24 horas")
+
     # Conseguir todos los detalles de venta asociados al ticket
     statement = select(Detalle_Venta).where(Detalle_Venta.idTicket==ticket_id)
     resultados = session.exec(statement)
@@ -81,6 +94,13 @@ async def realizar_devolucion(
 
         if not inventario:
             raise HTTPException(status_code=404, detail="INVENTARIO NO ENCONTRADO")
+        
+        # Verificar que la diferencia entre el medicamento y fecha actual sea de 1 mes al menos
+        if inventario.fechaCaducidad < date.today() + timedelta(days=30):
+            raise HTTPException(
+                status_code=400, 
+                detail="No se aceptan devoluciones de medicamentos próximos a caducar (menos de 30 días)."
+            )
 
         inventario.cantidad += row.cantidad
         # Actualizar inventario con patch
