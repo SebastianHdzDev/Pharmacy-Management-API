@@ -2,7 +2,7 @@ from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select
 from typing import Annotated, List
 from backend.db import get_session
-from backend.models import Compra, Sucursal, Medicamento, Tabla_Inventario
+from backend.models import Compra, Sucursal, Medicamento, Tabla_Inventario, Usuario, Proveedor
 from backend.schemas import * 
 from backend.auth import get_current_active_user
 
@@ -64,3 +64,58 @@ async def eliminar_inventario(
         raise HTTPException(status_code=404, detail="INVENTARIO NO ENCONTRADO")
     session.delete(inventario)
     session.commit()
+
+
+@router.post("/surtidos", response_model=CompraRead)
+async def surtir_inventarios(
+    payload: SurtidoRequest,
+    current_user: Usuario = Depends(get_current_active_user),
+    session: Session = Depends(get_session)
+) -> CompraRead:
+    
+    sucursal = session.get(Sucursal, current_user.idSucursal)
+    if not sucursal:
+        raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
+    
+    proveedor = session.get(Proveedor, payload.idProveedor)
+    if not proveedor:
+        raise HTTPException(status_code=404, detail="PROVEEDOR NO ENCONTRADO")
+    
+    # Generar la compra temporalmente a la cual asociar los inventarios
+    compra_info = CompraCreate(
+        monto=payload.montoTotal, 
+        idProveedor=payload.idProveedor,
+        idSucursal=current_user.idSucursal
+    )
+
+    compra = Compra.model_validate(compra_info)
+    session.add(compra)
+    session.flush()
+
+    # Explorar la lista de productos y crear inventarios
+    for item in payload.productos:
+        medicamento = session.get(Medicamento, item.idMedicamento)
+        if not medicamento:
+            raise HTTPException(status_code=404, detail=f"MEDICAMENTO ID {item.idMedicamento} NO ENCONTRADO")
+        
+        # Generar el inventario con el la informacion de cada producto o medicamento
+        inventario_info = Tabla_InventarioCreate(
+            lote=item.lote,
+            fechaCaducidad=item.fechaCaducidad,
+            precio_venta=item.precio_venta,
+            cantidad=item.cantidad,
+            costo_individual=item.costo_individual,
+            idSucursal=current_user.idSucursal,
+            idMedicamento=item.idMedicamento,
+            idCompra=compra.idCompra # <--- Asociar todos los inventarios a la misma compra
+        )
+
+        inventario = Tabla_Inventario.model_validate(inventario_info)
+        
+        # Almacenar en DB temporalmente
+        session.add(inventario)
+    
+    # Una vez finalizados almacenar definitivamente
+    session.commit()
+    session.refresh(compra)
+    return compra

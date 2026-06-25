@@ -4,6 +4,7 @@ from typing import Optional
 from sqlalchemy import Column, DECIMAL
 from datetime import date, datetime
 from enum import Enum
+from pydantic import BaseModel
 
 ###############   SUCURSAL    ###############
 class SucursalBase(SQLModel):
@@ -222,3 +223,19 @@ class VentaRequest(SQLModel):
     cliente: str | None = None
     metodo_pago: str 
     carrito: list[ItemCarrito]
+
+###############   SURTIDOS    ###############
+# Usado para crear inventario y referencia a medicamento
+class ItemSurtido(BaseModel):
+    idMedicamento: int
+    lote: str
+    fechaCaducidad: date
+    precio_venta: Decimal
+    cantidad: int
+    costo_individual: Decimal
+
+# Usado para tener un 'ticket' de lo que se surtio
+class SurtidoRequest(BaseModel):
+    idProveedor: int
+    montoTotal: Decimal
+    productos: list[ItemSurtido]
