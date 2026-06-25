@@ -8,7 +8,7 @@ from backend.auth import get_current_active_user
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.post("/detalles-venta", response_model=Detalle_VentaRead)
+@router.post("", response_model=Detalle_VentaRead)
 async def crear_detalle_venta(
     info_detalle_venta: Detalle_VentaCreate,
     session: Session = Depends(get_session)
@@ -29,7 +29,7 @@ async def crear_detalle_venta(
     session.refresh(detalle_venta)
     return detalle_venta
 
-@router.patch("/detalles-venta/{detalle_venta_id}", response_model=Detalle_VentaRead)
+@router.patch("/{detalle_venta_id}", response_model=Detalle_VentaRead)
 async def actualizar_detalle_venta(
     detalle_venta_id: Annotated[int, Path(title="ID del ticket")], 
     detalle_venta_info: Detalle_VentaUpdate,
@@ -54,7 +54,7 @@ async def actualizar_detalle_venta(
     return detalle_venta
 
 
-@router.delete("/detalles-venta/{detalle_venta_id}")
+@router.delete("/{detalle_venta_id}")
 async def eliminar_detalle_venta(
     detalle_venta_id : Annotated[int, Path(title="ID del detalle de venta")],
     session: Session = Depends(get_session)

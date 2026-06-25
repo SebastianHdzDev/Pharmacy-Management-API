@@ -8,14 +8,14 @@ from backend.auth import get_current_active_user
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("/compras", response_model=List[CompraRead])
+@router.get("", response_model=List[CompraRead])
 async def obtener_compras(session:Session=Depends(get_session))->List[CompraRead]:
     statement = select(Compra)
     compras = session.exec(statement)
     return compras.all()
 
 
-@router.post("/compras", response_model=CompraRead)
+@router.post("", response_model=CompraRead)
 async def crear_compra(
     info_compra : CompraCreate,
     session : Session = Depends(get_session)
@@ -30,7 +30,7 @@ async def crear_compra(
     return compra
 
 
-@router.patch("/compras/{compra_id}", response_model=CompraRead)
+@router.patch("/{compra_id}", response_model=CompraRead)
 async def actualizar_compra(
     compra_info: CompraUpdate,
     compra_id: Annotated[int, Path(title="ID de la compra")],
@@ -47,7 +47,7 @@ async def actualizar_compra(
     return compra
 
 
-@router.delete("/compras/{compra_id}")
+@router.delete("/{compra_id}")
 async def eliminar_compra(
     compra_id: Annotated[int, Path(title="ID de la compra")],
     session : Session = Depends(get_session)

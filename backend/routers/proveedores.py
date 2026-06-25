@@ -8,7 +8,7 @@ from backend.auth import get_current_active_user
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("/proveedores", response_model=List[ProveedorRead])
+@router.get("", response_model=List[ProveedorRead])
 async def obtener_proveedores(
     session: Session = Depends(get_session)
 ) -> List[ProveedorRead]:
@@ -17,7 +17,7 @@ async def obtener_proveedores(
     return proveedores.all()
 
 
-@router.get("/proveedores/{proveedor_id}/compras", response_model=List[CompraRead])
+@router.get("/{proveedor_id}/compras", response_model=List[CompraRead])
 async def obtener_compras_proveedores(
     proveedor_id  : Annotated[int, Path(title="ID del proveedor")],
     session : Session = Depends(get_session)
@@ -29,7 +29,7 @@ async def obtener_compras_proveedores(
     return compras.all()
 
 
-@router.post("/proveedores", response_model=ProveedorRead)
+@router.post("", response_model=ProveedorRead)
 async def crear_proveedor(
     info_proveedor : ProveedorCreate,
     session : Session = Depends(get_session)
@@ -41,7 +41,7 @@ async def crear_proveedor(
     return proveedor
 
 
-@router.patch("/proveedores/{proveedor_id}", response_model=ProveedorRead)
+@router.patch("/{proveedor_id}", response_model=ProveedorRead)
 async def actualizar_proveedor(
     proveedor_id: Annotated[int, Path(title="ID del proveedor")],
     proveedor_info : ProveedorUpdate,
@@ -58,7 +58,7 @@ async def actualizar_proveedor(
     return proveedor
 
 
-@router.delete("/proveedores/{proveedor_id}")
+@router.delete("/{proveedor_id}")
 async def eliminar_proveedor(
     proveedor_id: Annotated[int, Path(title="ID del proveedor")],
     session : Session = Depends(get_session)

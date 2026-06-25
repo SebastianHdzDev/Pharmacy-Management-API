@@ -8,7 +8,7 @@ from backend.auth import *
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.post("/usuarios", response_model=UsuarioRead)
+@router.post("", response_model=UsuarioRead)
 async def crear_usuario(
         info_usuario: UsuarioCreate,
         session: Session = Depends(get_session)
@@ -28,7 +28,7 @@ async def crear_usuario(
     return usuario
 
 
-@router.get("/usuarios", response_model=List[UsuarioRead])
+@router.get("", response_model=List[UsuarioRead])
 async def obtener_usuarios(session: Session=Depends(get_session)) -> List[UsuarioRead]: 
     statement = select(Usuario)
     resultados = session.exec(statement)
@@ -36,7 +36,7 @@ async def obtener_usuarios(session: Session=Depends(get_session)) -> List[Usuari
     return usuarios
 
 
-@router.patch("/usuarios/{usuario_id}", response_model=UsuarioRead)
+@router.patch("/{usuario_id}", response_model=UsuarioRead)
 async def actualizar_usuario(
     usuario_id : Annotated[int, Path(title="ID del usuario")],
     usuario_input : UsuarioUpdate, 
@@ -54,7 +54,8 @@ async def actualizar_usuario(
     session.refresh(usuario)
     return usuario
 
-@router.get("/usuarios/{usuario_id}/asistencias", response_model=List[AsistenciaRead])
+
+@router.get("/{usuario_id}/asistencias", response_model=List[AsistenciaRead])
 async def obtener_asistencias_usuario(
     usuario_id: Annotated[int, Path(title="ID del usuario")],
     session : Session = Depends(get_session)
@@ -65,7 +66,7 @@ async def obtener_asistencias_usuario(
     return session.exec(select(Asistencia).where(Asistencia.idUsuario==usuario_id)).all()
 
 
-@router.delete("/usuarios/{usuario_id}")
+@router.delete("/{usuario_id}")
 async def eliminar_usuario(
     usuario_id: int,
     current_user: Usuario = Depends(get_current_active_user), 
@@ -75,7 +76,7 @@ async def eliminar_usuario(
     usuario = session.exec(statement).first()
     if not usuario:
         raise HTTPException(status_code=404, detail="Usuario no encontrado")
-    if usuario.id == current_user.idUsuario:
+    if usuario.idUsuario == current_user.idUsuario:
         raise HTTPException(status_code=404, detail="¡NO PUEDES ELIMINARTE A TI MISMO!")
     session.delete(usuario)
     session.commit()

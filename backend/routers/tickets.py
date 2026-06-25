@@ -8,14 +8,14 @@ from backend.auth import get_current_active_user
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("/tickets", response_model=List[TicketRead])
+@router.get("", response_model=List[TicketRead])
 async def obtener_tickets(session:Session = Depends(get_session))->List[TicketRead]:
     statement = select(Ticket)
     tickets = session.exec(statement)
     return tickets.all()
 
 
-@router.post("/tickets", response_model=TicketRead)
+@router.post("", response_model=TicketRead)
 async def crear_ticket(
     info_ticket : TicketCreate,
     session : Session = Depends(get_session)
@@ -30,7 +30,7 @@ async def crear_ticket(
     return ticket
 
 
-@router.patch("/tickets/{ticket_id}", response_model=TicketRead)
+@router.patch("/{ticket_id}", response_model=TicketRead)
 async def actualizar_ticket(
     ticket_id : Annotated[int, Path(title="ID del ticket")],
     ticket_info : TicketUpdate,
@@ -47,7 +47,7 @@ async def actualizar_ticket(
     return ticket
 
 
-@router.delete("/tickets/{ticket_id}")
+@router.delete("/{ticket_id}")
 async def actualizar_ticket(
     ticket_id : Annotated[int, Path(title="ID del ticket")],
     ticket_info : TicketUpdate,
@@ -60,7 +60,7 @@ async def actualizar_ticket(
     session.commit()
 
 
-@router.get("/tickets/{ticket_id}/detalles-venta", response_model=List[Detalle_VentaRead])
+@router.get("/{ticket_id}/detalles-venta", response_model=List[Detalle_VentaRead])
 async def obtener_detalles_venta_ticket(
     ticket_id: Annotated[int, Path(title="ID del ticket")],
     session: Session = Depends(get_session)
@@ -73,7 +73,7 @@ async def obtener_detalles_venta_ticket(
     return detalles.all()
 
 
-@router.get("/tickets/{ticket_id}/facturas", response_model=FacturaRead)
+@router.get("/{ticket_id}/facturas", response_model=FacturaRead)
 async def obtener_factura_ticket(
     ticket_id : Annotated[int, Path(title="ID del ticket")],
     session: Session = Depends(get_session)

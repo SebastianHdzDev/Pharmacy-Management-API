@@ -8,7 +8,7 @@ from backend.auth import get_current_active_user
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.post("/asistencias", response_model=Asistencia)
+@router.post("", response_model=Asistencia)
 async def registrar_asistencia(
     info_asistencia: AsistenciaCreate,
     session: Session=Depends(get_session)
@@ -23,7 +23,7 @@ async def registrar_asistencia(
     return asistencia
 
 
-@router.get("/asistencias", response_model=List[Asistencia])
+@router.get("", response_model=List[Asistencia])
 async def obtener_asistencias(session: Session=Depends(get_session)) -> List[Asistencia]:
     statement = select(Asistencia)
     resultados = session.exec(statement)
@@ -31,7 +31,7 @@ async def obtener_asistencias(session: Session=Depends(get_session)) -> List[Asi
     return asistencias
 
 
-@router.patch("/asistencias/{asistencia_id}", response_model=AsistenciaRead)
+@router.patch("/{asistencia_id}", response_model=AsistenciaRead)
 async def actualizar_asistencia(
     asistencia_id: Annotated[int, Path(title="ID de la asistencia")],
     asistencia_info: AsistenciaUpdate,
@@ -48,7 +48,7 @@ async def actualizar_asistencia(
     return asistencia
 
 
-@router.delete("/asistencias/{asistencia_id}")
+@router.delete("/{asistencia_id}")
 async def eliminar_asistencia(
     asistencia_id: Annotated[int, Path(title="ID de la asistencia")],
     session: Session = Depends(get_session)

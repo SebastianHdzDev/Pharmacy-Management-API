@@ -9,7 +9,7 @@ from datetime import date, timedelta
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("/sucursales", response_model=List[Sucursal])
+@router.get("", response_model=List[Sucursal])
 async def obtener_sucursales(session:Session=Depends(get_session))->List[Sucursal]:
     statement = select(Sucursal)
     resultados = session.exec(statement)
@@ -17,7 +17,7 @@ async def obtener_sucursales(session:Session=Depends(get_session))->List[Sucursa
     return sucursales
 
 
-@router.get("/sucursales/{sucursal_id}", response_model=Sucursal)
+@router.get("/{sucursal_id}", response_model=Sucursal)
 async def obtener_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     session: Session = Depends(get_session) #ejecución implicita de with Session(engine)
@@ -28,7 +28,7 @@ async def obtener_sucursal(
     return sucursal #retornar si se encontro 
 
 
-@router.post("/sucursales", response_model=SucursalRead)
+@router.post("", response_model=SucursalRead)
 async def crear_sucursal(
     info_sucursal: SucursalCreate,
     session: Session=Depends(get_session)
@@ -42,7 +42,7 @@ async def crear_sucursal(
     return sucursal
 
 
-@router.patch("/sucursales/{sucursal_id}", response_model=SucursalRead)
+@router.patch("/{sucursal_id}", response_model=SucursalRead)
 async def actualizar_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     sucursal_info : SucursalUpdate,
@@ -59,7 +59,7 @@ async def actualizar_sucursal(
     return sucursal
 
 
-@router.delete("/sucursales/{sucursal_id}")
+@router.delete("/{sucursal_id}")
 async def eliminar_sucursal(
     sucursal_id:Annotated[int, Path(title="ID de la sucursal")],
     session: Session = Depends(get_session)
@@ -71,7 +71,7 @@ async def eliminar_sucursal(
     session.commit()
 
 
-@router.get("/sucursales/{sucursal_id}/usuarios/{usuario_id}", response_model=UsuarioRead)
+@router.get("/{sucursal_id}/usuarios/{usuario_id}", response_model=UsuarioRead)
 async def obtener_usuario_sucursal(
     usuario_id: Annotated[int, Path(title="ID del usuario")],
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
@@ -88,7 +88,7 @@ async def obtener_usuario_sucursal(
     return usuario
 
 
-@router.get("/sucursales/{sucursal_id}/usuarios", response_model=List[UsuarioRead])
+@router.get("/{sucursal_id}/usuarios", response_model=List[UsuarioRead])
 async def obtener_usuarios_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     session: Session=Depends(get_session)
@@ -102,7 +102,7 @@ async def obtener_usuarios_sucursal(
     return usuarios
 
 
-@router.get("/sucursales/{sucursal_id}/asistencias", response_model=List[AsistenciaRead])
+@router.get("/{sucursal_id}/asistencias", response_model=List[AsistenciaRead])
 async def obtener_asistencias_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     session : Session = Depends(get_session)
@@ -115,7 +115,7 @@ async def obtener_asistencias_sucursal(
     return resultados.all()
 
 
-@router.get("/sucursales/{sucursal_id}/compras", response_model=List[CompraRead])
+@router.get("/{sucursal_id}/compras", response_model=List[CompraRead])
 async def obtener_compras_sucursal(
     sucursal_id:Annotated[int, Path(title="ID de la sucursal")],
     session: Session = Depends(get_session)
@@ -128,7 +128,7 @@ async def obtener_compras_sucursal(
     return compras.all()
 
 
-@router.get("/sucursales/{sucursal_id}/inventarios", response_model=List[Tabla_InventarioRead])
+@router.get("/{sucursal_id}/inventarios", response_model=List[Tabla_InventarioRead])
 async def obtener_inventarios_sucursal(
     sucursal_id : Annotated[int, Path(title="ID de la sucursal")],
     session: Session = Depends(get_session)
@@ -141,7 +141,7 @@ async def obtener_inventarios_sucursal(
     return inventarios.all()
 
 
-@router.get("/sucursales/{sucursal_id}/tickets", response_model=List[TicketRead])
+@router.get("/{sucursal_id}/tickets", response_model=List[TicketRead])
 async def obtener_tickets_sucursal(
     sucursal_id : Annotated[int, Path(title="ID de la sucursal")],
     session : Session = Depends(get_session)
@@ -152,6 +152,7 @@ async def obtener_tickets_sucursal(
     statement = select(Ticket).where(Ticket.idSucursal==sucursal_id)
     tickets = session.exec(statement)
     return tickets.all()
+
 
 @router.get('/{sucursal_id}/corte-caja')
 async def obtener_corte_caja(

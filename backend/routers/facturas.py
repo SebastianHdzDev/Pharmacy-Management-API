@@ -8,7 +8,7 @@ from backend.auth import get_current_active_user
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("/facturas", response_model=List[FacturaRead])
+@router.get("", response_model=List[FacturaRead])
 async def obtener_facturas(
     session : Session = Depends(get_session)
 )->List[FacturaRead]:
@@ -17,7 +17,7 @@ async def obtener_facturas(
     return facturas.all()
 
 
-@router.post("/facturas", response_model=FacturaRead)
+@router.post("", response_model=FacturaRead)
 async def crear_factura(
     info_factura:FacturaCreate,
     session: Session = Depends(get_session)
@@ -32,7 +32,7 @@ async def crear_factura(
     return factura
 
 
-@router.patch("/facturas/{factura_id}", response_model=FacturaRead)
+@router.patch("/{factura_id}", response_model=FacturaRead)
 async def actualizar_factura(
     factura_id : Annotated[int, Path(title="ID de la factura")],
     factura_info : FacturaUpdate,
@@ -52,7 +52,7 @@ async def actualizar_factura(
     return factura
 
 
-@router.delete("/facturas/{factura_id}")
+@router.delete("/{factura_id}")
 async def actualizar_factura(
     factura_id : Annotated[int, Path(title="ID de la factura")],
     session : Session = Depends(get_session)

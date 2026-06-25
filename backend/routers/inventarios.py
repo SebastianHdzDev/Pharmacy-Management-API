@@ -8,14 +8,14 @@ from backend.auth import get_current_active_user
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("/inventarios", response_model=List[Tabla_InventarioRead])
+@router.get("", response_model=List[Tabla_InventarioRead])
 async def obtener_inventarios(session : Session=Depends(get_session)) -> List[Tabla_InventarioRead]:
     statement = select(Tabla_Inventario)
     inventarios = session.exec(statement)
     return inventarios.all()
 
 
-@router.post("/inventarios", response_model=Tabla_InventarioRead)
+@router.post("", response_model=Tabla_InventarioRead)
 async def crear_inventario(
     info_inventario : Tabla_InventarioCreate,
     session : Session = Depends(get_session)
@@ -37,7 +37,7 @@ async def crear_inventario(
     return inventario
 
 
-@router.patch("/inventarios/{inventario_id}", response_model=Tabla_InventarioRead)
+@router.patch("/{inventario_id}", response_model=Tabla_InventarioRead)
 async def actualizar_inventario(
     inventario_id : Annotated[int, Path(title="ID del inventario")],
     inventario_info : Tabla_InventarioUpdate,
@@ -54,7 +54,7 @@ async def actualizar_inventario(
     return inventario
 
 
-@router.delete("/inventarios/{inventario_id}")
+@router.delete("/{inventario_id}")
 async def eliminar_inventario(
     inventario_id : Annotated[int, Path(title="ID del inventario")],
     session: Session = Depends(get_session)

@@ -8,7 +8,7 @@ from backend.auth import get_current_active_user
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.post("/medicamentos", response_model=MedicamentoRead)
+@router.post("", response_model=MedicamentoRead)
 async def crear_medicamento(
     info_medicamento : MedicamentoCreate,
     session : Session = Depends(get_session)
@@ -20,7 +20,7 @@ async def crear_medicamento(
     return medicamento
 
 
-@router.get("/medicamentos", response_model=List[MedicamentoRead])
+@router.get("", response_model=List[MedicamentoRead])
 async def obtener_medicamentos(
     session : Session = Depends(get_session)
 ) -> List[MedicamentoRead]:
@@ -29,7 +29,7 @@ async def obtener_medicamentos(
     return resultados.all()
 
 
-@router.get("/medicamentos/{medicamento_id}", response_model=MedicamentoRead)
+@router.get("/{medicamento_id}", response_model=MedicamentoRead)
 async def obtener_medicamentos(
     medicamento_id : Annotated[int, Path(title="ID del medicamento")],
     session : Session = Depends(get_session)
@@ -39,7 +39,8 @@ async def obtener_medicamentos(
         raise HTTPException(status_code=404, detail="MEDICAMENTO NO ENCONTRADO")
     return medicamento
 
-@router.patch("/medicamentos/{medicamento_id}", response_model=MedicamentoRead)
+
+@router.patch("/{medicamento_id}", response_model=MedicamentoRead)
 async def actualizar_medicamento(
     medicamento_id : Annotated[int, Path(title="ID del medicamento")],
     medicamento_info : MedicamentoUpdate,
@@ -56,7 +57,7 @@ async def actualizar_medicamento(
     return medicamento
 
 
-@router.delete("/medicamentos/{medicamento_id}", response_model=MedicamentoRead)
+@router.delete("/{medicamento_id}", response_model=MedicamentoRead)
 async def eliminar_medicamento(
     medicamento_id : Annotated[int, Path(title="ID del medicamento")],
     session: Session = Depends(get_session)
