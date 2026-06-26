@@ -3,7 +3,7 @@ from sqlmodel import Session, select
 from sqlalchemy.exc import IntegrityError
 from typing import Annotated, List
 from backend.db import get_session
-from backend.models import Factura, Ticket
+from backend.models import Factura, Ticket, Usuario
 from backend.schemas import * 
 from backend.auth import get_current_active_user
 
@@ -21,6 +21,7 @@ async def obtener_facturas(
 @router.post("", response_model=FacturaRead)
 async def crear_factura(
     info_factura:FacturaCreate,
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> FacturaRead:
     ticket = session.get(Ticket, info_factura.idTicket)

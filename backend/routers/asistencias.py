@@ -11,6 +11,7 @@ router = APIRouter(dependencies=[Depends(get_current_active_user)])
 @router.post("", response_model=Asistencia)
 async def registrar_asistencia(
     info_asistencia: AsistenciaCreate,
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session=Depends(get_session)
 ) -> Asistencia:
     usuario = session.get(Usuario, info_asistencia.idUsuario)

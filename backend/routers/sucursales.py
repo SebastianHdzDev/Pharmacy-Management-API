@@ -125,6 +125,7 @@ async def obtener_asistencias_sucursal(
 @router.get("/{sucursal_id}/compras", response_model=List[CompraRead])
 async def obtener_compras_sucursal(
     sucursal_id:Annotated[int, Path(title="ID de la sucursal")],
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[CompraRead]:
     sucursal = session.get(Sucursal, sucursal_id)
@@ -138,6 +139,7 @@ async def obtener_compras_sucursal(
 @router.get("/{sucursal_id}/inventarios", response_model=List[Tabla_InventarioRead])
 async def obtener_inventarios_sucursal(
     sucursal_id : Annotated[int, Path(title="ID de la sucursal")],
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[Tabla_InventarioRead]:
     sucursal = session.get(Sucursal, sucursal_id)
@@ -151,6 +153,7 @@ async def obtener_inventarios_sucursal(
 @router.get("/{sucursal_id}/tickets", response_model=List[TicketRead])
 async def obtener_tickets_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[TicketRead]:
     sucursal = session.get(Sucursal, sucursal_id)
@@ -165,6 +168,7 @@ async def obtener_tickets_sucursal(
 async def obtener_corte_caja(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     fecha: date,
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ):
     sucursal = session.get(Sucursal, sucursal_id)

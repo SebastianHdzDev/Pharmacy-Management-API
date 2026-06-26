@@ -18,6 +18,7 @@ async def obtener_inventarios(session : Session=Depends(get_session)) -> List[Ta
 @router.post("", response_model=Tabla_InventarioRead)
 async def crear_inventario(
     info_inventario : Tabla_InventarioCreate,
+    current_user: Usuario = Depends(get_current_active_user),
     session : Session = Depends(get_session)
 )->Tabla_InventarioRead:
     # Sucursal, Compra, Medicamento 

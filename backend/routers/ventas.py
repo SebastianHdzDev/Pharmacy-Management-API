@@ -70,6 +70,7 @@ async def registrarVenta(
 @router.post('/{ticket_id}/devolucion', response_model=TicketRead)
 async def realizar_devolucion(
     ticket_id: Annotated[int, Path(title="ID del ticket")],
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> TicketRead:
     ticket = session.get(Ticket, ticket_id)

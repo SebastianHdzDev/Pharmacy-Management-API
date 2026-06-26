@@ -23,6 +23,7 @@ async def crear_medicamento(
 
 @router.get("", response_model=List[MedicamentoRead])
 async def obtener_medicamentos(
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[MedicamentoRead]:
     statement = select(Medicamento)
@@ -33,6 +34,7 @@ async def obtener_medicamentos(
 @router.get("/{medicamento_id}", response_model=MedicamentoRead)
 async def obtener_medicamentos(
     medicamento_id: Annotated[int, Path(title="ID del medicamento")],
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> MedicamentoRead:
     medicamento = session.get(Medicamento, medicamento_id)
@@ -81,6 +83,7 @@ async def buscar_medicamentos(
     tipoMedicamento: Optional[str],
     usoTerapeutico: Optional[str],
     requiereReceta: Optional[bool],
+    current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[MedicamentoRead]:
     statement = select(Medicamento)
