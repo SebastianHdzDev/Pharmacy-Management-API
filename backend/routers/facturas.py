@@ -1,5 +1,6 @@
 from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select
+from sqlalchemy.exc import IntegrityError
 from typing import Annotated, List
 from backend.db import get_session
 from backend.models import Factura, Ticket
@@ -27,9 +28,16 @@ async def crear_factura(
         raise HTTPException(status_code=404, detail="TICKET INDICADO NO ENCONTRADO")
     factura = Factura.model_validate(info_factura)
     session.add(factura)
-    session.commit()
-    session.refresh(factura)
-    return factura
+    try:
+        session.commit()
+        session.refresh(factura)
+        return factura
+    except IntegrityError:
+        session.rollback()
+        raise HTTPException(
+            status_code=400, 
+            detail="Este ticket ya ha sido facturado."
+        )  
 
 
 @router.patch("/{factura_id}", response_model=FacturaRead)

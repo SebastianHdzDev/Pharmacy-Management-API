@@ -104,5 +104,5 @@ class Factura(FacturaBase, table=True):
         CheckConstraint("LENGTH(rfc) = 13",name="chk_rfc"),
     )
     idFactura: Optional[int] = Field(default=None, primary_key=True)
-    idTicket: int = Field(foreign_key="ticket.idTicket")
+    idTicket: int = Field(foreign_key="ticket.idTicket", unique=True)
     ticket_obj:Optional[Ticket] = Relationship(back_populates="lista_facturas")
