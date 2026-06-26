@@ -2,9 +2,9 @@ from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select
 from typing import Annotated, List
 from backend.db import get_session
-from backend.models import Proveedor, Compra
+from backend.models import Proveedor, Compra, Usuario
 from backend.schemas import * 
-from backend.auth import get_current_active_user
+from backend.auth import get_current_active_user, verify_admin
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
@@ -19,8 +19,8 @@ async def obtener_proveedores(
 
 @router.get("/{proveedor_id}/compras", response_model=List[CompraRead])
 async def obtener_compras_proveedores(
-    proveedor_id  : Annotated[int, Path(title="ID del proveedor")],
-    session : Session = Depends(get_session)
+    proveedor_id: Annotated[int, Path(title="ID del proveedor")],
+    session: Session = Depends(get_session)
 )->List[CompraRead]:
     proveedor = session.get(Proveedor, proveedor_id)
     if not proveedor:
@@ -31,8 +31,9 @@ async def obtener_compras_proveedores(
 
 @router.post("", response_model=ProveedorRead)
 async def crear_proveedor(
-    info_proveedor : ProveedorCreate,
-    session : Session = Depends(get_session)
+    info_proveedor: ProveedorCreate,
+    current_user: Usuario = Depends(verify_admin),
+    session: Session = Depends(get_session)
 ) -> ProveedorRead:
     proveedor = Proveedor.model_validate(info_proveedor)
     session.add(proveedor)
@@ -44,8 +45,9 @@ async def crear_proveedor(
 @router.patch("/{proveedor_id}", response_model=ProveedorRead)
 async def actualizar_proveedor(
     proveedor_id: Annotated[int, Path(title="ID del proveedor")],
-    proveedor_info : ProveedorUpdate,
-    session : Session = Depends(get_session)
+    proveedor_info: ProveedorUpdate,
+    current_user: Usuario = Depends(verify_admin),
+    session: Session = Depends(get_session)
 ) -> ProveedorRead:
     proveedor = session.get(Proveedor, proveedor_id)
     if not proveedor:
@@ -61,7 +63,8 @@ async def actualizar_proveedor(
 @router.delete("/{proveedor_id}")
 async def eliminar_proveedor(
     proveedor_id: Annotated[int, Path(title="ID del proveedor")],
-    session : Session = Depends(get_session)
+    current_user: Usuario = Depends(verify_admin),
+    session: Session = Depends(get_session)
 ):
     proveedor = session.get(Proveedor, proveedor_id)
     if not proveedor:

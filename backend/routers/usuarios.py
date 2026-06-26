@@ -10,8 +10,9 @@ router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.post("", response_model=UsuarioRead)
 async def crear_usuario(
-        info_usuario: UsuarioCreate,
-        session: Session = Depends(get_session)
+    info_usuario: UsuarioCreate,
+    current_user: Usuario = Depends(verify_admin),
+    session: Session = Depends(get_session)
 )-> UsuarioRead:
     sucursal = session.get(Sucursal, info_usuario.idSucursal)
     if not sucursal:
@@ -29,7 +30,10 @@ async def crear_usuario(
 
 
 @router.get("", response_model=List[UsuarioRead])
-async def obtener_usuarios(session: Session=Depends(get_session)) -> List[UsuarioRead]: 
+async def obtener_usuarios(
+    current_user: Usuario = Depends(verify_admin),
+    session: Session=Depends(get_session)
+) -> List[UsuarioRead]: 
     statement = select(Usuario)
     resultados = session.exec(statement)
     usuarios = resultados.all()
@@ -38,8 +42,9 @@ async def obtener_usuarios(session: Session=Depends(get_session)) -> List[Usuari
 
 @router.patch("/{usuario_id}", response_model=UsuarioRead)
 async def actualizar_usuario(
-    usuario_id : Annotated[int, Path(title="ID del usuario")],
-    usuario_input : UsuarioUpdate, 
+    usuario_id: Annotated[int, Path(title="ID del usuario")],
+    usuario_input: UsuarioUpdate, 
+    current_user: Usuario = Depends(verify_admin),
     session : Session = Depends(get_session)
 ) -> UsuarioRead:
     usuario = session.get(Usuario, usuario_id)
@@ -58,7 +63,7 @@ async def actualizar_usuario(
 @router.get("/{usuario_id}/asistencias", response_model=List[AsistenciaRead])
 async def obtener_asistencias_usuario(
     usuario_id: Annotated[int, Path(title="ID del usuario")],
-    session : Session = Depends(get_session)
+    session: Session = Depends(get_session)
 ) -> List[AsistenciaRead]:
     usuario = session.get(Usuario, usuario_id)
     if not usuario:
@@ -69,7 +74,7 @@ async def obtener_asistencias_usuario(
 @router.delete("/{usuario_id}")
 async def eliminar_usuario(
     usuario_id: int,
-    current_user: Usuario = Depends(get_current_active_user), 
+    current_user: Usuario = Depends(verify_admin), 
     session: Session = Depends(get_session)
 ):
     statement = select(Usuario).where(Usuario.idUsuario==usuario_id)

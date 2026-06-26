@@ -4,13 +4,16 @@ from typing import Annotated, List
 from backend.db import get_session
 from backend.models import Sucursal, Usuario, Asistencia, Compra, Ticket, Tabla_Inventario
 from backend.schemas import * 
-from backend.auth import get_current_active_user
+from backend.auth import get_current_active_user, verify_admin
 from datetime import date, timedelta
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.get("", response_model=List[Sucursal])
-async def obtener_sucursales(session:Session=Depends(get_session))->List[Sucursal]:
+async def obtener_sucursales(
+    current_user: Usuario = Depends(verify_admin),
+    session: Session=Depends(get_session)
+) -> List[Sucursal]:
     statement = select(Sucursal)
     resultados = session.exec(statement)
     sucursales = resultados.all()
@@ -31,6 +34,7 @@ async def obtener_sucursal(
 @router.post("", response_model=SucursalRead)
 async def crear_sucursal(
     info_sucursal: SucursalCreate,
+    current_user: Usuario = Depends(verify_admin),
     session: Session=Depends(get_session)
 ) -> SucursalRead:    
     sucursal = Sucursal.model_validate(info_sucursal) #valida todo el objeto
@@ -45,8 +49,9 @@ async def crear_sucursal(
 @router.patch("/{sucursal_id}", response_model=SucursalRead)
 async def actualizar_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
-    sucursal_info : SucursalUpdate,
-    session : Session = Depends(get_session)
+    sucursal_info: SucursalUpdate,
+    current_user: Usuario = Depends(verify_admin),
+    session: Session = Depends(get_session)
 ) -> SucursalRead:
     sucursal = session.get(Sucursal, sucursal_id) #Tabla, parametro{id}
     if sucursal is None:
@@ -61,7 +66,8 @@ async def actualizar_sucursal(
 
 @router.delete("/{sucursal_id}")
 async def eliminar_sucursal(
-    sucursal_id:Annotated[int, Path(title="ID de la sucursal")],
+    sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    current_user: Usuario = Depends(verify_admin),
     session: Session = Depends(get_session)
 ):
     sucursal = session.get(Sucursal, sucursal_id)
@@ -91,6 +97,7 @@ async def obtener_usuario_sucursal(
 @router.get("/{sucursal_id}/usuarios", response_model=List[UsuarioRead])
 async def obtener_usuarios_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    current_user: Usuario = Depends(verify_admin),
     session: Session=Depends(get_session)
 ) -> List[UsuarioRead]: 
     sucursal = session.get(Sucursal, sucursal_id)
@@ -143,8 +150,8 @@ async def obtener_inventarios_sucursal(
 
 @router.get("/{sucursal_id}/tickets", response_model=List[TicketRead])
 async def obtener_tickets_sucursal(
-    sucursal_id : Annotated[int, Path(title="ID de la sucursal")],
-    session : Session = Depends(get_session)
+    sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    session: Session = Depends(get_session)
 ) -> List[TicketRead]:
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:

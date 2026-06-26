@@ -2,16 +2,17 @@ from fastapi import APIRouter, HTTPException, Path, Depends
 from sqlmodel import Session, select, or_  
 from typing import Annotated, List
 from backend.db import get_session
-from backend.models import Medicamento
+from backend.models import Medicamento, Usuario
 from backend.schemas import * 
-from backend.auth import get_current_active_user
+from backend.auth import get_current_active_user, verify_admin
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.post("", response_model=MedicamentoRead)
 async def crear_medicamento(
-    info_medicamento : MedicamentoCreate,
-    session : Session = Depends(get_session)
+    info_medicamento: MedicamentoCreate,
+    current_user: Usuario = Depends(verify_admin),
+    session: Session = Depends(get_session)
 ) -> MedicamentoRead:
     medicamento = Medicamento.model_validate(info_medicamento)
     session.add(medicamento)
@@ -22,7 +23,7 @@ async def crear_medicamento(
 
 @router.get("", response_model=List[MedicamentoRead])
 async def obtener_medicamentos(
-    session : Session = Depends(get_session)
+    session: Session = Depends(get_session)
 ) -> List[MedicamentoRead]:
     statement = select(Medicamento)
     resultados = session.exec(statement)
@@ -31,8 +32,8 @@ async def obtener_medicamentos(
 
 @router.get("/{medicamento_id}", response_model=MedicamentoRead)
 async def obtener_medicamentos(
-    medicamento_id : Annotated[int, Path(title="ID del medicamento")],
-    session : Session = Depends(get_session)
+    medicamento_id: Annotated[int, Path(title="ID del medicamento")],
+    session: Session = Depends(get_session)
 ) -> MedicamentoRead:
     medicamento = session.get(Medicamento, medicamento_id)
     if not medicamento:
@@ -42,8 +43,9 @@ async def obtener_medicamentos(
 
 @router.patch("/{medicamento_id}", response_model=MedicamentoRead)
 async def actualizar_medicamento(
-    medicamento_id : Annotated[int, Path(title="ID del medicamento")],
-    medicamento_info : MedicamentoUpdate,
+    medicamento_id: Annotated[int, Path(title="ID del medicamento")],
+    medicamento_info: MedicamentoUpdate,
+    current_user: Usuario = Depends(verify_admin),
     session: Session = Depends(get_session)
 ) -> MedicamentoRead:
     medicamento = session.get(Medicamento, medicamento_id)
@@ -59,7 +61,8 @@ async def actualizar_medicamento(
 
 @router.delete("/{medicamento_id}", response_model=MedicamentoRead)
 async def eliminar_medicamento(
-    medicamento_id : Annotated[int, Path(title="ID del medicamento")],
+    medicamento_id: Annotated[int, Path(title="ID del medicamento")],
+    current_user: Usuario = Depends(verify_admin),
     session: Session = Depends(get_session)
 ) -> MedicamentoRead:
     medicamento = session.get(Medicamento, medicamento_id)
