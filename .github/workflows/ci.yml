@@ -1,0 +1,36 @@
+name: Backend CI Pipeline
+
+on:
+  pull_request:
+    branches: [ "develop", "main" ] # Runs when opening a PR to these branches
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+    steps:
+    # Download repo
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    # Download python
+    - name: Set up Python 3.11
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
+        cache: 'pip'
+
+    # Install project dependencies
+    - name: Install Dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install fastapi sqlmodel psycopg2-binary uvicorn ruff pytest
+
+    # Security & Formatting Check (Linting)
+    - name: Run Ruff Linter
+      run: |
+        ruff check .
+
+    # Automated Tests 
+    - name: Run Pytest
+      run: |
+        pytest
