@@ -1,15 +1,31 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlmodel import Session, select
-from typing import Annotated, List
-from backend.db import get_session
-from backend.models import Compra, Sucursal, Medicamento, Tabla_Inventario, Usuario, Proveedor
-from backend.schemas import * 
+
 from backend.auth import get_current_active_user
+from backend.db import get_session
+from backend.models import (
+    Compra,
+    Medicamento,
+    Proveedor,
+    Sucursal,
+    Tabla_Inventario,
+    Usuario,
+)
+from backend.schemas import (
+    CompraCreate,
+    CompraRead,
+    SurtidoRequest,
+    Tabla_InventarioCreate,
+    Tabla_InventarioRead,
+    Tabla_InventarioUpdate,
+)
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=List[Tabla_InventarioRead])
-async def obtener_inventarios(session : Session=Depends(get_session)) -> List[Tabla_InventarioRead]:
+@router.get("", response_model=list[Tabla_InventarioRead])
+async def obtener_inventarios(session : Session=Depends(get_session)) -> list[Tabla_InventarioRead]:
     statement = select(Tabla_Inventario)
     inventarios = session.exec(statement)
     return inventarios.all()

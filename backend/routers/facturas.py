@@ -1,18 +1,20 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
-from sqlmodel import Session, select
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlalchemy.exc import IntegrityError
-from typing import Annotated, List
+from sqlmodel import Session, select
+
+from backend.auth import get_current_active_user
 from backend.db import get_session
 from backend.models import Factura, Ticket, Usuario
-from backend.schemas import * 
-from backend.auth import get_current_active_user
+from backend.schemas import FacturaCreate, FacturaRead, FacturaUpdate
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=List[FacturaRead])
+@router.get("", response_model=list[FacturaRead])
 async def obtener_facturas(
     session : Session = Depends(get_session)
-)->List[FacturaRead]:
+)->list[FacturaRead]:
     statement = select(Factura)
     facturas = session.exec(statement)
     return facturas.all()
@@ -62,7 +64,7 @@ async def actualizar_factura(
 
 
 @router.delete("/{factura_id}")
-async def actualizar_factura(
+async def eliminar_factura(
     factura_id : Annotated[int, Path(title="ID de la factura")],
     session : Session = Depends(get_session)
 ):

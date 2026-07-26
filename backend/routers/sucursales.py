@@ -1,11 +1,22 @@
-from fastapi import APIRouter, HTTPException, Path, Depends, Query
-from sqlmodel import Session, select, func
-from typing import Annotated, List
-from backend.db import get_session
-from backend.models import Sucursal, Usuario, Asistencia, Compra, Ticket, Tabla_Inventario
-from backend.schemas import * 
-from backend.auth import get_current_active_user, verify_admin
 from datetime import date, timedelta
+from typing import Annotated, List, Optional
+
+from fastapi import APIRouter, Depends, HTTPException, Path, Query
+from sqlmodel import Session, func, select
+
+from backend.auth import get_current_active_user, verify_admin
+from backend.db import get_session
+from backend.models import Asistencia, Compra, Sucursal, Tabla_Inventario, Ticket, Usuario
+from backend.schemas import (
+    AsistenciaRead,
+    CompraRead,
+    SucursalCreate,
+    SucursalRead,
+    SucursalUpdate,
+    Tabla_InventarioRead,
+    TicketRead,
+    UsuarioRead,
+)
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 

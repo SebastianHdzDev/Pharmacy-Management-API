@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlmodel import Session, select
-from typing import Annotated, List
-from backend.db import get_session
-from backend.models import Usuario, Asistencia
-from backend.schemas import * 
+
 from backend.auth import get_current_active_user
+from backend.db import get_session
+from backend.models import Asistencia, Usuario
+from backend.schemas import AsistenciaCreate, AsistenciaRead, AsistenciaUpdate
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
@@ -24,8 +26,8 @@ async def registrar_asistencia(
     return asistencia
 
 
-@router.get("", response_model=List[Asistencia])
-async def obtener_asistencias(session: Session=Depends(get_session)) -> List[Asistencia]:
+@router.get("", response_model=list[Asistencia])
+async def obtener_asistencias(session: Session=Depends(get_session)) -> list[Asistencia]:
     statement = select(Asistencia)
     resultados = session.exec(statement)
     asistencias = resultados.all()

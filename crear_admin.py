@@ -1,10 +1,11 @@
 import os
+
 from dotenv import load_dotenv
 from sqlmodel import Session, select
 
-from backend.db import engine 
-from backend.models import Usuario, Sucursal
 from backend.auth import get_pwd_hash
+from backend.db import engine
+from backend.models import Sucursal, Usuario
 
 load_dotenv()
 

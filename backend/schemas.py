@@ -1,10 +1,10 @@
-from sqlmodel import SQLModel, Field
-from decimal import Decimal
-from typing import Optional
-from sqlalchemy import Column, DECIMAL
 from datetime import date, datetime
+from decimal import Decimal
 from enum import Enum
+
 from pydantic import BaseModel
+from sqlmodel import Field, SQLModel
+
 
 ###############   SUCURSAL    ###############
 class SucursalBase(SQLModel):
@@ -50,7 +50,7 @@ class UsuarioUpdate(SQLModel):
 ###############   ASISTENCIA    ###############
 class AsistenciaBase(SQLModel):
     horaLlegada: datetime = Field(default_factory=datetime.now)
-    horaSalida: Optional[datetime] = Field(default=None)
+    horaSalida: datetime | None = Field(default=None)
 
 class AsistenciaCreate(AsistenciaBase):
     idUsuario: int
@@ -155,7 +155,7 @@ class TicketEnum (str, Enum):
 
 class TicketBase(SQLModel):
     estatus: TicketEnum = Field(default=TicketEnum.ACTIVO, max_length=10)
-    cliente: Optional[str] = Field(default=None, max_length=50)
+    cliente: str | None = Field(default=None, max_length=50)
 
 class TicketCreate(TicketBase):
     idSucursal: int #Sucursal que expide el ticket

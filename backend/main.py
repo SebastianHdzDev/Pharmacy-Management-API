@@ -1,9 +1,10 @@
-from fastapi import FastAPI
-from .models import *
-from .schemas import *
-from .db import init_db
 from contextlib import asynccontextmanager
+
+from fastapi import FastAPI
+
+from .db import init_db
 from .routers import router
+
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
