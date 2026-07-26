@@ -1,11 +1,19 @@
-from fastapi import APIRouter, HTTPException, Depends, status
+from datetime import timedelta
+
+from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordRequestForm
 from sqlmodel import Session, select
+
+from backend.auth import (
+    ACCESS_TOKEN_EXPIRE_MINUTES,
+    Token,
+    create_access_token,
+    get_current_active_user,
+    verify_pwd,
+)
 from backend.db import get_session
 from backend.models import Usuario
-from backend.schemas import * 
-from fastapi.security import OAuth2PasswordRequestForm
-from datetime import timedelta
-from backend.auth import get_current_active_user, Token, verify_pwd, verify_token, create_access_token, ACCESS_TOKEN_EXPIRE_MINUTES
+from backend.schemas import UsuarioRead
 
 router = APIRouter()
 

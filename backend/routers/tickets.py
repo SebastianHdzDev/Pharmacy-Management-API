@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
-from sqlmodel import Session, select
 from typing import Annotated, List
-from backend.db import get_session
-from backend.models import Sucursal, Detalle_Venta, Factura, Ticket, Usuario
-from backend.schemas import * 
+
+from fastapi import APIRouter, Depends, HTTPException, Path
+from sqlmodel import Session, select
+
 from backend.auth import get_current_active_user
+from backend.db import get_session
+from backend.models import Detalle_Venta, Factura, Sucursal, Ticket, Usuario
+from backend.schemas import Detalle_VentaRead, FacturaRead, TicketCreate, TicketRead, TicketUpdate
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
@@ -48,7 +50,7 @@ async def actualizar_ticket(
 
 
 @router.delete("/{ticket_id}")
-async def actualizar_ticket(
+async def eliminar_ticket(
     ticket_id : Annotated[int, Path(title="ID del ticket")],
     ticket_info : TicketUpdate,
     session : Session = Depends(get_session)

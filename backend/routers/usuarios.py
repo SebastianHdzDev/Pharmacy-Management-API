@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlmodel import Session, select
-from typing import Annotated, List
+
+from backend.auth import get_current_active_user, get_pwd_hash, verify_admin
 from backend.db import get_session
-from backend.models import Sucursal, Usuario, Asistencia
-from backend.schemas import * 
-from backend.auth import *
+from backend.models import Asistencia, Sucursal, Usuario
+from backend.schemas import AsistenciaRead, UsuarioCreate, UsuarioRead, UsuarioUpdate
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
@@ -29,11 +31,11 @@ async def crear_usuario(
     return usuario
 
 
-@router.get("", response_model=List[UsuarioRead])
+@router.get("", response_model=list[UsuarioRead])
 async def obtener_usuarios(
     current_user: Usuario = Depends(verify_admin),
     session: Session=Depends(get_session)
-) -> List[UsuarioRead]: 
+) -> list[UsuarioRead]: 
     statement = select(Usuario)
     resultados = session.exec(statement)
     usuarios = resultados.all()
@@ -60,11 +62,11 @@ async def actualizar_usuario(
     return usuario
 
 
-@router.get("/{usuario_id}/asistencias", response_model=List[AsistenciaRead])
+@router.get("/{usuario_id}/asistencias", response_model=list[AsistenciaRead])
 async def obtener_asistencias_usuario(
     usuario_id: Annotated[int, Path(title="ID del usuario")],
     session: Session = Depends(get_session)
-) -> List[AsistenciaRead]:
+) -> list[AsistenciaRead]:
     usuario = session.get(Usuario, usuario_id)
     if not usuario:
         raise HTTPException(status_code=404, detail="USUARIO NO ENCONTRADO")

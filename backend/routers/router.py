@@ -1,8 +1,8 @@
-from fastapi import APIRouter
 from asistencias import router as asistencias_router
 from compras import router as compras_router
 from detalles_venta import router as detalles_venta_router
 from facturas import router as facturas_router
+from fastapi import APIRouter
 from inventarios import router as inventarios_router
 from medicamentos import router as medicamentos_router
 from proveedores import router as proveedores_router
@@ -10,6 +10,7 @@ from sucursales import router as sucursales_router
 from tickets import router as tickets_router
 from usuarios import router as usuarios_router
 from ventas import router as ventas_router
+
 from auth import router as auth_router
 
 router = APIRouter()

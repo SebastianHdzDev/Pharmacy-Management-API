@@ -1,10 +1,12 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
-from sqlmodel import Session, select
-from typing import Annotated, List
-from backend.db import get_session
-from backend.models import Detalle_Venta, Ticket, Tabla_Inventario
-from backend.schemas import * 
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
+from sqlmodel import Session
+
 from backend.auth import get_current_active_user
+from backend.db import get_session
+from backend.models import Detalle_Venta, Tabla_Inventario, Ticket
+from backend.schemas import Detalle_VentaCreate, Detalle_VentaRead, Detalle_VentaUpdate
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 

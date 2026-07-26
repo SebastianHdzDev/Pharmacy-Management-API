@@ -1,15 +1,18 @@
-from fastapi import Depends, HTTPException, status
-from datetime import datetime, timedelta, timezone
-from typing import Optional
-import jwt 
-from fastapi.security import OAuth2PasswordBearer
-from pydantic import BaseModel
-from backend.models import Usuario, RolEnum
-from passlib.context import CryptContext
-from .db import get_session
-from sqlmodel import Session, select
 import os
+from datetime import datetime, timedelta, timezone
+
+import jwt
 from dotenv import load_dotenv
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from passlib.context import CryptContext
+from pydantic import BaseModel
+from sqlmodel import Session, select
+
+from backend.models import RolEnum, Usuario
+
+from .db import get_session
+
 # install fastapi, sqlmodel, pyjwt, "pwdlib[argon2]", passlib
 
 load_dotenv()
@@ -27,10 +30,10 @@ class Token(BaseModel):
 
 
 class TokenData(BaseModel):
-    alias: Optional[str] = None
-    sucursal: Optional[int] = None
-    id_sub: Optional[int] = None
-    rol: Optional[str] = None
+    alias: str | None = None
+    sucursal: int | None = None
+    id_sub: int | None = None
+    rol: str | None = None
 
 
 #verifies if the password matches the hashed password stored
@@ -44,7 +47,7 @@ def get_pwd_hash(password: str) -> str:
 
 
 #create the access token (generates a dict)
-def create_access_token(data: dict, expires_delta:Optional[timedelta]=None):
+def create_access_token(data: dict, expires_delta:timedelta | None=None):
     to_encode = data.copy()
     if expires_delta:
         expire = datetime.now(timezone.utc) + expires_delta

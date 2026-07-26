@@ -1,27 +1,29 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlmodel import Session, select
-from typing import Annotated, List
-from backend.db import get_session
-from backend.models import Proveedor, Compra, Usuario
-from backend.schemas import * 
+
 from backend.auth import get_current_active_user, verify_admin
+from backend.db import get_session
+from backend.models import Compra, Proveedor, Usuario
+from backend.schemas import CompraRead, ProveedorCreate, ProveedorRead, ProveedorUpdate
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=List[ProveedorRead])
+@router.get("", response_model=list[ProveedorRead])
 async def obtener_proveedores(
     session: Session = Depends(get_session)
-) -> List[ProveedorRead]:
+) -> list[ProveedorRead]:
     statement = select(Proveedor)
     proveedores = session.exec(statement)
     return proveedores.all()
 
 
-@router.get("/{proveedor_id}/compras", response_model=List[CompraRead])
+@router.get("/{proveedor_id}/compras", response_model=list[CompraRead])
 async def obtener_compras_proveedores(
     proveedor_id: Annotated[int, Path(title="ID del proveedor")],
     session: Session = Depends(get_session)
-)->List[CompraRead]:
+)->list[CompraRead]:
     proveedor = session.get(Proveedor, proveedor_id)
     if not proveedor:
         raise HTTPException(status_code=404, detail="PROVEEDOR NO ENCONTRADO")

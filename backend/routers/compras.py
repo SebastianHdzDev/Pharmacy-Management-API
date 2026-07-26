@@ -1,15 +1,17 @@
-from fastapi import APIRouter, HTTPException, Path, Depends
+from typing import Annotated
+
+from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlmodel import Session, select
-from typing import Annotated, List
+
+from backend.auth import get_current_active_user
 from backend.db import get_session
 from backend.models import Compra, Sucursal
-from backend.schemas import * 
-from backend.auth import get_current_active_user
+from backend.schemas import CompraCreate, CompraRead, CompraUpdate
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=List[CompraRead])
-async def obtener_compras(session:Session=Depends(get_session))->List[CompraRead]:
+@router.get("", response_model=list[CompraRead])
+async def obtener_compras(session:Session=Depends(get_session))->list[CompraRead]:
     statement = select(Compra)
     compras = session.exec(statement)
     return compras.all()
