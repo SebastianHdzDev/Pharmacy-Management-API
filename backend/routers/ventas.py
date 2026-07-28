@@ -86,7 +86,8 @@ async def realizar_devolucion(
 
     # Verificar si el usuario actual pertenece a la sucursal
     if ticket.idSucursal != current_user.idSucursal:
-        raise HTTPException(status_code=403, detail="El usuario no puede realizar una devolucion en una sucursal a la cual NO pertenece")
+        raise HTTPException(status_code=403, detail="""El usuario no puede realizar una devolucion 
+                                                    en una sucursal a la cual NO pertenece""")
     
     if ticket.estatus == "CANCELADO":
         raise HTTPException(status_code=400, detail="EL PROCESO YA NO ESTA DISPONIBLE PARA ESTE TICKET")
