@@ -19,6 +19,8 @@ async def registrar_asistencia(
     usuario = session.get(Usuario, info_asistencia.idUsuario)
     if not usuario:
         raise HTTPException(status_code=404, detail="NO SE ENCONTRO EL USUARIO CON EL ID INDICADO")
+    if usuario.idUsuario != current_user.idUsuario:
+        raise HTTPException(status_code=403, detail="NO SE PUEDE CREAR ASISTENCIAS DE OTROS USUARIOS")
     asistencia = Asistencia.model_validate(info_asistencia)
     session.add(asistencia)
     session.commit()
