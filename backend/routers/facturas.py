@@ -47,12 +47,15 @@ async def crear_factura(
 async def actualizar_factura(
     factura_id : Annotated[int, Path(title="ID de la factura")],
     factura_info : FacturaUpdate,
+    current_user: Usuario = Depends(get_current_active_user),
     session : Session = Depends(get_session)
 ) -> FacturaRead:
     factura = session.get(Factura, factura_id)
     if not factura:
         raise HTTPException(status_code=404, detail="FACTURA NO ENCONTRADA")
     ticket = session.get(Ticket, factura.idTicket)
+    if ticket.idSucursal != current_user.idSucursal:
+        raise HTTPException(status_code=403, detail="El cajero no puede modificar facturas de otra sucursal")
     if ticket.estatus=='CANCELADO':
         raise HTTPException(status_code=400, detail="TICKET CANCELADO, NO SE PUEDE CORREGIR INFORMACION")
     datos = factura_info.model_dump(exclude_unset=True)

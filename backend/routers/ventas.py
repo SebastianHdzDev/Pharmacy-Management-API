@@ -34,6 +34,11 @@ async def registrarVenta(
         inventario = session.exec(statement).first()
         if not inventario:
             raise HTTPException(status_code=404, detail=f"Inventario no encontrado: {detalle.idInventario}")
+
+        # Verificar que el inventario pertenezca a la sucursal en la que se dio de alta el ticket
+        if ticket.idSucursal != inventario.idSucursal:
+            raise HTTPException(status_code=400, detail="No se puede descontar stock de una sucursal ajena.")
+
         # Verificar si el inventario satisface la venta
         if inventario.cantidad < detalle.cantidad:
             raise HTTPException(status_code=400, 
@@ -78,6 +83,12 @@ async def realizar_devolucion(
     ticket = session.get(Ticket, ticket_id)
     if not ticket:
         raise HTTPException(status_code=404, detail="TICKET NO ENCONTRADO")
+
+    # Verificar si el usuario actual pertenece a la sucursal
+    if ticket.idSucursal != current_user.idSucursal:
+        raise HTTPException(status_code=403, detail="""El usuario no puede realizar una devolucion 
+                                                    en una sucursal a la cual NO pertenece""")
+    
     if ticket.estatus == "CANCELADO":
         raise HTTPException(status_code=400, detail="EL PROCESO YA NO ESTA DISPONIBLE PARA ESTE TICKET")
     

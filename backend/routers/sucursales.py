@@ -110,7 +110,7 @@ async def obtener_usuarios_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     current_user: Usuario = Depends(verify_admin),
     session: Session=Depends(get_session)
-) -> List[UsuarioRead]: 
+) -> List[UsuarioRead]:
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
@@ -123,8 +123,11 @@ async def obtener_usuarios_sucursal(
 @router.get("/{sucursal_id}/asistencias", response_model=List[AsistenciaRead])
 async def obtener_asistencias_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    current_user: Usuario = Depends(get_current_active_user),
     session : Session = Depends(get_session)
 ) -> List[AsistenciaRead]:
+    if current_user.rol=="CAJERO" and sucursal_id != current_user.idSucursal:
+        raise HTTPException(status_code=403, detail="El cajero actual no puede consultar informacion de otra sucursal")
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
@@ -139,6 +142,8 @@ async def obtener_compras_sucursal(
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[CompraRead]:
+    if current_user.rol=="CAJERO" and sucursal_id != current_user.idSucursal:
+        raise HTTPException(status_code=403, detail="El cajero actual no puede consultar informacion de otra sucursal")
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
@@ -153,6 +158,8 @@ async def obtener_inventarios_sucursal(
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[Tabla_InventarioRead]:
+    if current_user.rol=="CAJERO" and sucursal_id != current_user.idSucursal:
+        raise HTTPException(status_code=403, detail="El cajero actual no puede consultar informacion de otra sucursal")
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
@@ -167,6 +174,8 @@ async def obtener_tickets_sucursal(
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[TicketRead]:
+    if current_user.rol=="CAJERO" and sucursal_id != current_user.idSucursal:
+        raise HTTPException(status_code=403, detail="El cajero actual no puede consultar informacion de otra sucursal")
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL NO ENCONTRADA")
@@ -182,6 +191,9 @@ async def obtener_corte_caja(
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ):
+    if current_user.rol=="CAJERO" and sucursal_id != current_user.idSucursal:
+        raise HTTPException(status_code=403, detail="El cajero actual no puede consultar informacion de otra sucursal")
+
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL NO ENCONTRADA")
