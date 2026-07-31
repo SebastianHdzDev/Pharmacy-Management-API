@@ -54,7 +54,7 @@ async def actualizar_proveedor(
     proveedor = session.get(Proveedor, proveedor_id)
     if not proveedor:
         raise HTTPException(status_code=404, detail="PROVEEDOR NO ENCONTRADO")
-    datos = proveedor.model_dump(exclude_unset=True)
+    datos = proveedor_info.model_dump(exclude_unset=True)
     proveedor.sqlmodel_update(datos)
     session.add(proveedor)
     session.commit()
