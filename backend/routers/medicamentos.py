@@ -28,7 +28,7 @@ async def obtener_medicamentos(
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> list[MedicamentoRead]:
-    statement = select(Medicamento)
+    statement = select(Medicamento).where(Medicamento.estaActivo)
     resultados = session.exec(statement)
     return resultados.all()
 
@@ -72,7 +72,10 @@ async def eliminar_medicamento(
     medicamento = session.get(Medicamento, medicamento_id)
     if not medicamento:
         raise HTTPException(status_code=404, detail="MEDICAMENTO NO ENCONTRADO")
-    session.delete(medicamento)
+    if not medicamento.estaActivo:
+        raise HTTPException(status_code=400, detail="EL MEDICAMENTO YA FUE DADO DE BAJA")
+    medicamento.estaActivo = False
+    session.add(medicamento)
     session.commit()
 
 
@@ -88,7 +91,7 @@ async def buscar_medicamentos(
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> list[MedicamentoRead]:
-    statement = select(Medicamento)
+    statement = select(Medicamento).where(Medicamento.estaActivo)
 
     if nombre:
         statement = statement.where(Medicamento.nombre.ilike(f"%{nombre}%"))

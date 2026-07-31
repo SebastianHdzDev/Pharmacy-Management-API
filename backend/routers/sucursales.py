@@ -25,7 +25,7 @@ async def obtener_sucursales(
     current_user: Usuario = Depends(verify_admin),
     session: Session=Depends(get_session)
 ) -> List[Sucursal]:
-    statement = select(Sucursal)
+    statement = select(Sucursal).where(Sucursal.estaActivo)
     resultados = session.exec(statement)
     sucursales = resultados.all()
     return sucursales
@@ -84,7 +84,10 @@ async def eliminar_sucursal(
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL NO ENCONTRADA")
-    session.delete(sucursal)
+    if not sucursal.estaActivo:
+        raise HTTPException(status_code=400, detail="LA SUCURSAL YA FUE DADA DE BAJA")
+    sucursal.estaActivo = False
+    session.add(sucursal)
     session.commit()
 
 
