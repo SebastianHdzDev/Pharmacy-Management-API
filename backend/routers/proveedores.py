@@ -14,7 +14,7 @@ router = APIRouter(dependencies=[Depends(get_current_active_user)])
 async def obtener_proveedores(
     session: Session = Depends(get_session)
 ) -> list[ProveedorRead]:
-    statement = select(Proveedor)
+    statement = select(Proveedor).where(Proveedor.estaActivo)
     proveedores = session.exec(statement)
     return proveedores.all()
 
@@ -54,7 +54,7 @@ async def actualizar_proveedor(
     proveedor = session.get(Proveedor, proveedor_id)
     if not proveedor:
         raise HTTPException(status_code=404, detail="PROVEEDOR NO ENCONTRADO")
-    datos = proveedor.model_dump(exclude_unset=True)
+    datos = proveedor_info.model_dump(exclude_unset=True)
     proveedor.sqlmodel_update(datos)
     session.add(proveedor)
     session.commit()
@@ -71,5 +71,8 @@ async def eliminar_proveedor(
     proveedor = session.get(Proveedor, proveedor_id)
     if not proveedor:
         raise HTTPException(status_code=404, detail="PROVEEDOR NO ENCONTRADO")
-    session.delete(proveedor)
+    if not proveedor.estaActivo:
+        raise HTTPException(status_code=400, detail="EL PROVEEDOR YA FUE DADO DE BAJA")
+    proveedor.estaActivo = False
+    session.add(proveedor)
     session.commit()

@@ -11,6 +11,7 @@ from backend.schemas import (
     CompraBase,
     Detalle_VentaBase,
     FacturaBase,
+    FacturaEnum,
     MedicamentoBase,
     ProveedorBase,
     RolEnum,
@@ -29,9 +30,10 @@ class Sucursal(SucursalBase, table=True):
     )
     idSucursal: int | None = Field(default=None, primary_key=True)
     num_sucursal: int = Field(unique=True, gt=0)
+    estaActivo: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default=text("true")))
     empleados: list["Usuario"] = Relationship(back_populates="sucursal_obj")
     lista_pedidos: list["Compra"] = Relationship(back_populates="sucursal_obj")
-    lista_inventarios:list["Tabla_Inventario"]=Relationship(back_populates="sucursal_obj")
+    lista_inventarios: list["Tabla_Inventario"] = Relationship(back_populates="sucursal_obj")
 
 class Usuario(UsuarioBase, table=True):
     __table_args__ = (
@@ -58,7 +60,8 @@ class Proveedor(ProveedorBase, table=True):
         CheckConstraint("telefono ~ '^[0-9]{10}$'", name="chk_telefono_proveedor"),
     )
     idProveedor: int | None = Field(default=None, primary_key=True)
-    lista_surtidos:list["Compra"]=Relationship(back_populates="proveedor_obj")
+    estaActivo: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default=text("true")))
+    lista_surtidos: list["Compra"] = Relationship(back_populates="proveedor_obj")
 
 class Compra(CompraBase, table=True):
     __table_args__=(
@@ -74,6 +77,7 @@ class Compra(CompraBase, table=True):
 
 class Medicamento(MedicamentoBase, table=True):
     idMedicamento: int | None = Field(default=None, primary_key=True)
+    estaActivo: bool = Field(default=True, sa_column=Column(Boolean, nullable=False, server_default=text("true")) )
     lista_lotes_inventario:list["Tabla_Inventario"]=Relationship(back_populates="medicamento_obj")
 
 class Tabla_Inventario(Tabla_InventarioBase, table=True):
@@ -118,10 +122,15 @@ class Detalle_Venta(Detalle_VentaBase, table=True):
     ticket_obj:Ticket | None = Relationship(back_populates="lista_detalles_venta")
     tabla_inventario_obj:Tabla_Inventario | None = Relationship(back_populates="apariciones_detalles")
 
-class Factura(FacturaBase, table=True): 
+class Factura(FacturaBase, table=True):
     __table_args__=(
-        CheckConstraint("LENGTH(rfc) = 13",name="chk_rfc"),
+        CheckConstraint("LENGTH(rfc) = 13", name="chk_rfc"),
+        CheckConstraint("estatus IN ('ACTIVA', 'CANCELADA')", name="chk_estatus_factura"),
     )
     idFactura: int | None = Field(default=None, primary_key=True)
+    estatus: FacturaEnum = Field(
+        max_length=10,
+        sa_column=Column(SAEnum(FacturaEnum), nullable=False, server_default=text("'ACTIVA'"))
+    )
     idTicket: int = Field(foreign_key="ticket.idTicket", unique=True)
-    ticket_obj:Ticket | None = Relationship(back_populates="lista_facturas")
+    ticket_obj: Ticket | None = Relationship(back_populates="lista_facturas")

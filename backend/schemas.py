@@ -11,17 +11,19 @@ class SucursalBase(SQLModel):
     direccion: str = Field(max_length=150)
     telefono: str = Field(max_length=10)
     num_sucursal: int = Field(gt=0)
+    estaActivo: bool = Field(default=True)
 
 class SucursalCreate(SucursalBase):
     pass
 
 class SucursalRead(SucursalBase):
-    idSucursal: int 
+    idSucursal: int
 
 class SucursalUpdate(SQLModel):
     direccion: str | None = None
     telefono: str | None = None
     num_sucursal: int | None = None
+    estaActivo: bool | None = None
 
 ###############   USUARIO    ###############
 class RolEnum(str, Enum):
@@ -68,6 +70,7 @@ class ProveedorBase(SQLModel):
     nombre: str = Field(max_length=100)
     telefono: str = Field(max_length=10)
     correo: str = Field(max_length=50)
+    estaActivo: bool = Field(default=True)
 
 class ProveedorCreate(ProveedorBase):
     pass
@@ -79,6 +82,7 @@ class ProveedorUpdate(SQLModel):
     nombre: str | None = None
     telefono: str | None = None
     correo: str | None = None
+    estaActivo: bool | None = None
 
 ###############   COMPRA    ###############
 class CompraBase(SQLModel):
@@ -106,7 +110,8 @@ class MedicamentoBase(SQLModel):
     laboratorio: str = Field(max_length=50)
     tipoMedicamento: str = Field(max_length=50)
     usoTerapeutico: str = Field(max_length=255)
-    requiereReceta: bool 
+    requiereReceta: bool
+    estaActivo: bool = Field(default = True)
 
 class MedicamentoCreate(MedicamentoBase):
     pass
@@ -122,6 +127,7 @@ class MedicamentoUpdate(SQLModel):
     tipoMedicamento: str|None = None
     usoTerapeutico: str|None = None
     requiereReceta: bool|None = None
+    estaActivo: bool|None = None
 
 ###############   TABLA_INVENTARIO    ###############
 class Tabla_InventarioBase(SQLModel):
@@ -148,7 +154,7 @@ class Tabla_InventarioUpdate(SQLModel):
     cantidad: int |None = None
     costo_individual: Decimal|None = None
 
-###############   TABLA_INVENTARIO    ###############
+###############   TICKET   ###############
 class TicketEnum (str, Enum):
     ACTIVO="ACTIVO"
     CANCELADO="CANCELADO"
@@ -186,30 +192,36 @@ class Detalle_VentaUpdate(SQLModel):
     cantidad: int|None = None
 
 ###############   FACTURA    ###############
+class FacturaEnum(str, Enum):
+    ACTIVA = "ACTIVA"
+    CANCELADA = "CANCELADA"
+
 class FacturaBase(SQLModel):
     rfc: str = Field(max_length=13)
     razonSocial: str = Field(max_length=150)
     selloDigital: str = Field(max_length=255)
-    fechaTimbrado: date 
+    fechaTimbrado: date
     folioFiscal: str = Field(max_length=40)
     usoCFDI: str = Field(max_length=35)
     domicilioFiscal: str = Field(max_length=150)
+    estatus: FacturaEnum = Field(default=FacturaEnum.ACTIVA, max_length=10)
 
 class FacturaCreate(FacturaBase):
-    idTicket:int
+    idTicket: int
 
 class FacturaRead(FacturaBase):
-    idFactura:int
-    idTicket:int
+    idFactura: int
+    idTicket: int
 
 class FacturaUpdate(SQLModel):
-    rfc: str|None = None
-    razonSocial: str|None = None
-    selloDigital: str|None = None
-    fechaTimbrado: date|None = None
-    folioFiscal: str|None = None
-    usoCFDI: str|None = None
-    domicilioFiscal: str|None = None
+    rfc: str | None = None
+    razonSocial: str | None = None
+    selloDigital: str | None = None
+    fechaTimbrado: date | None = None
+    folioFiscal: str | None = None
+    usoCFDI: str | None = None
+    domicilioFiscal: str | None = None
+    estatus: FacturaEnum | None = None
 
 ###############   VENTAS    ###############
 # Paquete individual de un medicamento

@@ -64,15 +64,3 @@ async def actualizar_factura(
     session.commit()
     session.refresh(factura)
     return factura
-
-
-@router.delete("/{factura_id}")
-async def eliminar_factura(
-    factura_id : Annotated[int, Path(title="ID de la factura")],
-    session : Session = Depends(get_session)
-):
-    factura = session.get(Factura, factura_id)
-    if not factura:
-        raise HTTPException(status_code=404, detail="FACTURA NO ENCONTRADA")
-    session.delete(factura)    
-    session.commit()
