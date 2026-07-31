@@ -1,6 +1,5 @@
-from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Path
+from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session, select
 
 from backend.auth import get_current_active_user
@@ -52,35 +51,6 @@ async def crear_inventario(
     session.commit()
     session.refresh(inventario)
     return inventario
-
-
-@router.patch("/{inventario_id}", response_model=Tabla_InventarioRead)
-async def actualizar_inventario(
-    inventario_id : Annotated[int, Path(title="ID del inventario")],
-    inventario_info : Tabla_InventarioUpdate,
-    session : Session = Depends(get_session)
-) -> Tabla_InventarioRead:
-    inventario = session.get(Tabla_Inventario, inventario_id)
-    if not inventario:
-        raise HTTPException(status_code=404, detail="INVENTARIO NO ENCONTRADO")
-    datos = inventario_info.model_dump(exclude_unset=True)
-    inventario.sqlmodel_update(datos)
-    session.add(inventario)
-    session.commit()
-    session.refresh(inventario)
-    return inventario
-
-
-@router.delete("/{inventario_id}")
-async def eliminar_inventario(
-    inventario_id : Annotated[int, Path(title="ID del inventario")],
-    session: Session = Depends(get_session)
-):
-    inventario = session.get(Tabla_Inventario, inventario_id)
-    if not inventario:
-        raise HTTPException(status_code=404, detail="INVENTARIO NO ENCONTRADO")
-    session.delete(inventario)
-    session.commit()
 
 
 @router.post("/surtidos", response_model=CompraRead)
@@ -136,3 +106,35 @@ async def surtir_inventarios(
     session.commit()
     session.refresh(compra)
     return compra
+
+
+@router.patch("/{inventario_id}/editar", response_model=Tabla_InventarioRead)
+async def editar_inventario_existente(
+    payload: Tabla_InventarioUpdate,
+    inventario_id: int,
+    current_user: Usuario = Depends(get_current_active_user),
+    session: Session = Depends(get_session)
+) -> Tabla_InventarioRead:
+    statement = select(Tabla_Inventario).where(
+        Tabla_Inventario.idInventario == inventario_id
+    ).with_for_update()
+    inventario = session.exec(statement).first()
+    if not inventario:
+        raise HTTPException(status_code=404, detail="Inventario no encontrado")
+    if inventario.idSucursal != current_user.idSucursal:
+        raise HTTPException(status_code=403, detail="No se puede editar inventarios de otra sucursal")
+    if payload.costo_individual is not None:
+        inventario.costo_individual = payload.costo_individual
+        
+    if payload.fechaCaducidad is not None:
+        inventario.fechaCaducidad = payload.fechaCaducidad
+        
+    if payload.precio_venta is not None:
+        inventario.precio_venta = payload.precio_venta
+        
+    if payload.lote is not None:
+        inventario.lote = payload.lote
+    session.add(inventario)
+    session.commit()
+    session.refresh(inventario)
+    return inventario
