@@ -1,4 +1,5 @@
 import os
+import uuid
 from datetime import datetime, timedelta, timezone
 
 import jwt
@@ -9,11 +10,10 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from backend.models import RolEnum, Usuario
+from backend.models import RolEnum, TokenBloqueado, Usuario
 
 from .db import get_session
 
-# install fastapi, sqlmodel, pyjwt, "pwdlib[argon2]", passlib
 
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
@@ -34,6 +34,7 @@ class TokenData(BaseModel):
     sucursal: int | None = None
     id_sub: int | None = None
     rol: str | None = None
+    jti: str | None = None
 
 
 #verifies if the password matches the hashed password stored
@@ -53,7 +54,8 @@ def create_access_token(data: dict, expires_delta:timedelta | None=None):
         expire = datetime.now(timezone.utc) + expires_delta
     else:
         expire = datetime.now(timezone.utc) + timedelta(minutes=15)
-    to_encode.update({"exp": expire}) #k,v to update
+    token_id = uuid.uuid4().hex
+    to_encode.update({"exp": expire, "jti": token_id}) #k,v to update
     encoded_jwt = jwt.encode(to_encode, SECRET_KEY, algorithm=ALGORITHM)
     return encoded_jwt
 
@@ -70,7 +72,8 @@ def verify_token(token:str) -> TokenData:
             alias=alias,
             sucursal=payload.get("sucursal"),
             id_sub=payload.get("id_sub"),
-            rol=payload.get("rol")
+            rol=payload.get("rol"),
+            jti=payload.get("jti")
         )
     except jwt.PyJWTError:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
@@ -80,6 +83,13 @@ def verify_token(token:str) -> TokenData:
 
 def get_current_user(token:str = Depends(oauth2_scheme), db: Session = Depends(get_session)):
     token_data = verify_token(token)
+    # Buscar en db mediante el jti
+    token_bloqueado = db.get(TokenBloqueado, token_data.jti)
+    if token_bloqueado:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Sesión cerrada (Token invalidado)",
+            headers={"WWW-Authenticate": "Bearer"})
+    # Si no esta bloqueado, conseguir usuario
     statement = select(Usuario).where(Usuario.alias==token_data.alias)
     user = db.exec(statement).first()
     if not user:
