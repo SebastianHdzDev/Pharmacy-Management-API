@@ -14,7 +14,6 @@ from backend.models import RolEnum, TokenBloqueado, Usuario
 
 from .db import get_session
 
-
 load_dotenv()
 SECRET_KEY = os.getenv("SECRET_KEY")
 ALGORITHM = "HS256"
