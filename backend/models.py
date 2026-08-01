@@ -4,7 +4,7 @@ from typing import Optional
 
 from sqlalchemy import DECIMAL, Boolean, CheckConstraint, Column, text
 from sqlalchemy import Enum as SAEnum
-from sqlmodel import Field, Relationship
+from sqlmodel import Field, Relationship, SQLModel
 
 from backend.schemas import (
     AsistenciaBase,
@@ -134,3 +134,8 @@ class Factura(FacturaBase, table=True):
     )
     idTicket: int = Field(foreign_key="ticket.idTicket", unique=True)
     ticket_obj: Ticket | None = Relationship(back_populates="lista_facturas")
+
+class TokenBloqueado(SQLModel, table=True):
+    jti: str = Field(primary_key=True) # pk implicitly has an index
+    fecha_expiracion: datetime = Field(nullable=False)
+    id_usuario: int = Field(foreign_key="usuario.idUsuario", nullable=False)
