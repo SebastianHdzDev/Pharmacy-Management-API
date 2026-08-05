@@ -29,6 +29,8 @@ async def crear_factura(
     ticket = session.get(Ticket, info_factura.idTicket)
     if not ticket:
         raise HTTPException(status_code=404, detail="TICKET INDICADO NO ENCONTRADO")
+    if ticket.idSucursal != current_user.idSucursal: 
+        raise HTTPException(status_code=403, detail="No se pueden crear facturas de tickets de otra sucursal")
     factura = Factura.model_validate(info_factura)
     session.add(factura)
     try:
