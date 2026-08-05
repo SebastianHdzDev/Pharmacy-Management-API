@@ -11,8 +11,11 @@ from backend.schemas import Detalle_VentaRead, FacturaRead, TicketRead
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
 @router.get("", response_model=List[TicketRead])
-async def obtener_tickets(session:Session = Depends(get_session))->List[TicketRead]:
-    statement = select(Ticket)
+async def obtener_tickets(
+    session:Session = Depends(get_session),
+    current_user : Usuario = Depends(get_current_active_user)
+)->List[TicketRead]:
+    statement = select(Ticket).where(Ticket.idSucursal == current_user.idSucursal)
     tickets = session.exec(statement)
     return tickets.all()
 

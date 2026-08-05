@@ -3,7 +3,7 @@ from typing import Annotated
 from fastapi import APIRouter, Depends, HTTPException, Path
 from sqlmodel import Session, select
 
-from backend.auth import get_current_active_user
+from backend.auth import get_current_active_user, verify_admin
 from backend.db import get_session
 from backend.models import Asistencia, Usuario
 from backend.schemas import AsistenciaCreate, AsistenciaRead, AsistenciaUpdate
@@ -29,8 +29,11 @@ async def registrar_asistencia(
 
 
 @router.get("", response_model=list[Asistencia])
-async def obtener_asistencias(session: Session=Depends(get_session)) -> list[Asistencia]:
-    statement = select(Asistencia)
+async def obtener_asistencias(
+    session: Session=Depends(get_session),
+    current_user: Usuario = Depends(verify_admin)
+) -> list[Asistencia]:
+    statement = select(Asistencia).join(Usuario).where(Usuario.idSucursal == current_user.idSucursal)
     resultados = session.exec(statement)
     asistencias = resultados.all()
     return asistencias
@@ -56,10 +59,12 @@ async def actualizar_asistencia(
 @router.delete("/{asistencia_id}")
 async def eliminar_asistencia(
     asistencia_id: Annotated[int, Path(title="ID de la asistencia")],
-    session: Session = Depends(get_session)
+    session: Session = Depends(get_session),
+    current_user: Usuario = Depends(verify_admin)
 ):
     asistencia = session.get(Asistencia, asistencia_id)
     if not asistencia:
         raise HTTPException(status_code=404, detail="ASISTENCIA NO ENCONTRADA")
+    
     session.delete(asistencia)
     session.commit()
