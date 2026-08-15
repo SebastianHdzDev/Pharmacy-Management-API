@@ -251,3 +251,26 @@ class SurtidoRequest(BaseModel):
     idProveedor: int
     montoTotal: Decimal
     productos: list[ItemSurtido]
+
+###############   MERMAS    ###############
+class MermaEnum(str, Enum):
+    DANIO = "DAÑO"
+    CADUCIDAD = "CADUCIDAD"
+    ROBO = "ROBO"
+    ERROR_CONTEO = "ERROR DE CONTEO"
+    OTRO = "OTRO"
+
+class MermaBase(SQLModel):
+    cantidad: int
+    motivo: MermaEnum = Field(max_length=15)
+    descripcion: str | None = Field(max_length=255, default=None)
+
+class MermaRead(MermaBase):
+    idMerma: int
+    idInventario: int
+    idUsuario: int
+    idSucursal: int
+    fecha: date
+
+class MermaCreate(MermaBase):
+    idInventario : int
