@@ -6,6 +6,7 @@ from .compras import router as compras_router
 from .facturas import router as facturas_router
 from .inventarios import router as inventarios_router
 from .medicamentos import router as medicamentos_router
+from .mermas import router as mermas_router
 from .proveedores import router as proveedores_router
 from .sucursales import router as sucursales_router
 from .tickets import router as tickets_router
@@ -35,3 +36,5 @@ router.include_router(tickets_router, prefix="/tickets", tags=["Tickets"])
 router.include_router(facturas_router, prefix="/facturas", tags=["Facturas"])
 
 router.include_router(ventas_router, prefix="/ventas", tags=["Ventas"])
+
+router.include_router(mermas_router, prefix="/mermas", tags=["Mermas"])

@@ -13,6 +13,8 @@ from backend.schemas import (
     FacturaBase,
     FacturaEnum,
     MedicamentoBase,
+    MermaBase,
+    MermaEnum,
     ProveedorBase,
     RolEnum,
     SucursalBase,
@@ -139,3 +141,17 @@ class TokenBloqueado(SQLModel, table=True):
     jti: str = Field(primary_key=True) # pk implicitly has an index
     fecha_expiracion: datetime = Field(nullable=False)
     id_usuario: int = Field(foreign_key="usuario.idUsuario", nullable=False)
+
+class Merma(MermaBase, table=True):
+    __table_args__ = (
+        CheckConstraint("cantidad > 0", name="chk_cantidad_merma")
+    )
+    idMerma : int | None = Field(default=None, primary_key=True)
+    motivo: MermaEnum = Field(
+        max_length=15,
+        sa_column=Column(SAEnum(MermaEnum), nullable=False)
+    )
+    fecha: date = Field(default_factory=date.today)
+    idInventario : int = Field(foreign_key="tabla_inventario.idInventario")
+    idUsuario: int = Field(foreign_key="usuario.idUsuario")
+    idSucursal: int = Field(foreign_key="sucursal.idSucursal")
