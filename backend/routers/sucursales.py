@@ -203,27 +203,47 @@ async def obtener_corte_caja(
     
     # Conseguir tickets de la sucursal, con la fecha de hoy y activos
     statement = select(
+        Ticket.metodo_pago,
         func.count(Ticket.idTicket), #contar
         func.sum(Ticket.total)
     ).where(
         Ticket.idSucursal == sucursal_id, 
         Ticket.fecha == fecha, 
         Ticket.estatus == 'ACTIVO'
-    )
-    # obtener tupla (cantidad, suma)
-    resultados = session.exec(statement).fetchone()
+    ).group_by(Ticket.metodo_pago)
 
-    # Aplicar or por si devuelve None
-    # resultados[0] = count 
-    cantidad_tickets = resultados[0] or 0
+    # obtener lista de tuplas (cantidad, suma)
+    resultados = session.exec(statement).all()
 
-    # resultados[1] = sum
-    corte_caja = resultados[1] or 0.0
+    total = 0.0
+    total_efectivo = 0.0
+    total_tarjeta = 0.0
+    total_tickets = 0
 
+    # mapear columnas select a tuplas
+    for metodo, cantidad, suma in resultados:
+        # obtener monto y conteo de acuerdo al metodo de pago
+        # Aplicar or por si devuelve None
+        monto = suma or 0.0
+        cantidad = cantidad or 0
+
+        # sumar ese subtotal al total
+        total += monto
+        total_tickets += cantidad
+
+        if metodo == "EFECTIVO":
+            total_efectivo = monto
+        elif metodo == "TARJETA":
+            total_tarjeta = monto
+            
     return {
         "fecha": fecha,
-        "cantidad_de_tickets": cantidad_tickets,
-        "corte_caja": corte_caja}
+        "cantidad_de_tickets": total_tickets,
+        "desglose": {
+            "efectivo": total_efectivo,
+            "tarjeta": total_tarjeta
+        },
+        "corte_caja": total}
 
 
 @router.get("/{sucursal_id}/inventarios/", response_model=List[Tabla_Inventario])
