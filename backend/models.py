@@ -15,6 +15,7 @@ from backend.schemas import (
     MedicamentoBase,
     MermaBase,
     MermaEnum,
+    MetodoPagoEnum,
     ProveedorBase,
     RolEnum,
     SucursalBase,
@@ -73,6 +74,7 @@ class Compra(CompraBase, table=True):
     monto: Decimal = Field(sa_column=Column(DECIMAL(10,2), nullable=False))
     idProveedor: int = Field(foreign_key="proveedor.idProveedor") 
     idSucursal: int = Field(foreign_key="sucursal.idSucursal")
+    idUsuarioRegistro: int = Field(foreign_key="usuario.idUsuario")
     sucursal_obj: Sucursal | None = Relationship(back_populates="lista_pedidos")
     proveedor_obj:Proveedor | None = Relationship(back_populates="lista_surtidos")
     lista_inventarios_surtidos: list["Tabla_Inventario"] = Relationship(back_populates="compra_obj")
@@ -108,7 +110,14 @@ class Ticket(TicketBase, table=True):
     fecha: date = Field(default_factory=date.today, nullable=False)
     estatus: TicketEnum = Field(max_length=10, sa_column=Column(SAEnum(TicketEnum), nullable=False, 
                                                                 server_default=text("'ACTIVO'")))
+    metodo_pago: MetodoPagoEnum = Field(
+        max_length=8,
+        sa_column=Column(SAEnum(MetodoPagoEnum), 
+            nullable=False, 
+            server_default=text("'EFECTIVO'"))
+    )
     idSucursal: int = Field(foreign_key="sucursal.idSucursal")
+    idUsuarioVendedor: int = Field(primary_key="usuario.idUsuario")
     lista_detalles_venta: list["Detalle_Venta"] = Relationship(back_populates="ticket_obj") 
     lista_facturas: list["Factura"] = Relationship(back_populates="ticket_obj") 
 

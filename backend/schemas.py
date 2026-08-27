@@ -92,6 +92,7 @@ class CompraBase(SQLModel):
 class CompraCreate(CompraBase):
     idProveedor: int
     idSucursal: int 
+    idUsuarioRegistro: int
 
 class CompraRead(CompraBase):
     idCompra: int
@@ -159,12 +160,18 @@ class TicketEnum (str, Enum):
     ACTIVO="ACTIVO"
     CANCELADO="CANCELADO"
 
+class MetodoPagoEnum(str, Enum):
+    EFECTIVO = "EFECTIVO"
+    TARJETA = "TARJETA"
+
 class TicketBase(SQLModel):
     estatus: TicketEnum = Field(default=TicketEnum.ACTIVO, max_length=10)
     cliente: str | None = Field(default=None, max_length=50)
+    metodo_pago: MetodoPagoEnum = Field(default=MetodoPagoEnum.EFECTIVO)
 
 class TicketCreate(TicketBase):
     idSucursal: int #Sucursal que expide el ticket
+    idUsuarioVendedor: int
 
 class TicketRead(TicketBase):
     idTicket: int
@@ -233,8 +240,8 @@ class ItemCarrito(SQLModel):
 # Paquete completo que manda el frontend
 class VentaRequest(SQLModel):
     cliente: str | None = None
-    metodo_pago: str 
     carrito: list[ItemCarrito]
+    metodo_pago: MetodoPagoEnum
 
 ###############   SURTIDOS    ###############
 # Usado para crear inventario y referencia a medicamento
