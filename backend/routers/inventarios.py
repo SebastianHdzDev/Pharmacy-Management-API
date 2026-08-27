@@ -72,7 +72,8 @@ async def surtir_inventarios(
     compra_info = CompraCreate(
         monto=payload.montoTotal, 
         idProveedor=payload.idProveedor,
-        idSucursal=current_user.idSucursal
+        idSucursal=current_user.idSucursal,
+        idUsuarioRegistro=current_user.idUsuario
     )
 
     compra = Compra.model_validate(compra_info)
