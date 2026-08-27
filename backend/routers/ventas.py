@@ -18,7 +18,13 @@ async def registrarVenta(
     session: Session=Depends(get_session)
 ) -> TicketRead:
     # Extraer ID de sucursal del token 
-    ticket_info = TicketCreate("ACTIVO", cart.cliente, current_user.idSucursal)
+    ticket_info = TicketCreate(
+        estatus="ACTIVO", 
+        cliente=cart.cliente, 
+        metodo_pago=cart.metodo_pago,
+        idSucursal=current_user.idSucursal,
+        idUsuarioVendedor=current_user.idUsuario
+    )
     ticket = Ticket.model_validate(ticket_info)
     session.add(ticket)
     session.flush() # Hacer commit temporal, no definitivo
