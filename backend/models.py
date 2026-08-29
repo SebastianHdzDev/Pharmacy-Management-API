@@ -4,7 +4,7 @@ from typing import Optional
 
 from sqlalchemy import DECIMAL, Boolean, CheckConstraint, Column, text
 from sqlalchemy import Enum as SAEnum
-from sqlmodel import Field, Relationship, SQLModel
+from sqlmodel import Field, Index, Relationship, SQLModel
 
 from backend.schemas import (
     AsistenciaBase,
@@ -53,6 +53,9 @@ class Usuario(UsuarioBase, table=True):
     lista_asistencias: list["Asistencia"] = Relationship(back_populates="usuario_obj")
 
 class Asistencia(AsistenciaBase, table=True):
+    __table_args__ = (
+        Index("idx_asistencia_usuario_llegada","idUsuario","horaLlegada")
+    )
     idAsistencia: int | None = Field(default=None, primary_key=True)
     horaLlegada: datetime = Field(nullable=False)
     idUsuario: int = Field(foreign_key="usuario.idUsuario")
@@ -89,6 +92,8 @@ class Tabla_Inventario(Tabla_InventarioBase, table=True):
         CheckConstraint('precio_venta > 0', name="chk_inv_precio_venta"),
         CheckConstraint('costo_individual > 0', name="chk_inv_costo"),
         CheckConstraint("cantidad >= 0", name="chk_inv_cantidad"),
+        Index("idx_inventario_sucursal_medicamento","idSucursal","idMedicamento"),
+        Index("idx_inventario_sucursal_caducidad","idSucursal","fechaCaducidad")
     )
     idInventario: int | None = Field(default=None, primary_key=True)
     precio_venta: Decimal = Field(sa_column=Column(DECIMAL(10,2), nullable=False))
@@ -104,6 +109,7 @@ class Tabla_Inventario(Tabla_InventarioBase, table=True):
 class Ticket(TicketBase, table=True):
     __table_args__=(
         CheckConstraint("estatus IN ('ACTIVO', 'CANCELADO')", name="chk_estatus_ticket"),
+        Index("idx_ticket_sucursal_fecha","idSucursal","fecha")
     )
     idTicket: int | None = Field(default=None, primary_key=True)
     total: Decimal = Field(default=0, sa_column=Column(DECIMAL(10,2), nullable=False, server_default=text("0")) )
@@ -153,7 +159,8 @@ class TokenBloqueado(SQLModel, table=True):
 
 class Merma(MermaBase, table=True):
     __table_args__ = (
-        CheckConstraint("cantidad > 0", name="chk_cantidad_merma")
+        CheckConstraint("cantidad > 0", name="chk_cantidad_merma"),
+        Index("idx_merma_sucursal_fecha","idSucursal","fecha")
     )
     idMerma : int | None = Field(default=None, primary_key=True)
     motivo: MermaEnum = Field(
