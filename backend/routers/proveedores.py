@@ -1,34 +1,55 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from backend.auth import get_current_active_user, verify_admin
 from backend.db import get_session
+from backend.dependencies import paginacion_comun
 from backend.models import Compra, Proveedor, Usuario
-from backend.schemas import CompraRead, ProveedorCreate, ProveedorRead, ProveedorUpdate
+from backend.schemas import (
+    PaginacionCompras,
+    PaginacionProveedores,
+    ProveedorCreate,
+    ProveedorRead,
+    ProveedorUpdate,
+)
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=list[ProveedorRead])
+@router.get("", response_model=PaginacionProveedores)
 async def obtener_proveedores(
+    paginacion: dict = Depends(paginacion_comun),
     session: Session = Depends(get_session)
-) -> list[ProveedorRead]:
+) -> PaginacionProveedores:
     statement = select(Proveedor).where(Proveedor.estaActivo)
-    proveedores = session.exec(statement)
-    return proveedores.all()
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    proveedores = session.exec(statement).all()
+    return {"total": total_records, "items": proveedores}
 
 
-@router.get("/{proveedor_id}/compras", response_model=list[CompraRead])
+@router.get("/{proveedor_id}/compras", response_model=PaginacionCompras)
 async def obtener_compras_proveedores(
     proveedor_id: Annotated[int, Path(title="ID del proveedor")],
+    paginacion: dict = Depends(paginacion_comun),
     session: Session = Depends(get_session)
-)->list[CompraRead]:
+) -> PaginacionCompras:
     proveedor = session.get(Proveedor, proveedor_id)
     if not proveedor:
         raise HTTPException(status_code=404, detail="PROVEEDOR NO ENCONTRADO")
-    compras = session.exec(select(Compra).where(Compra.idProveedor== proveedor_id))
-    return compras.all()
+    statement = select(Compra).where(Compra.idProveedor == proveedor_id)
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    compras = session.exec(statement).all()
+    return {"total": total_records, "items": compras}
 
 
 @router.post("", response_model=ProveedorRead)

@@ -1,21 +1,23 @@
-from typing import List
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from backend.auth import get_current_active_user
 from backend.db import get_session
+from backend.dependencies import paginacion_comun
 from backend.models import Merma, Tabla_Inventario, Usuario
-from backend.schemas import MermaCreate, MermaRead, RolEnum
+from backend.schemas import MermaCreate, MermaRead, PaginacionMermas, RolEnum
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=List[MermaRead])
+@router.get("", response_model=PaginacionMermas)
 async def obtener_mermas(
+    paginacion: dict = Depends(paginacion_comun),
     sucursal_id: int | None = None,
     session: Session = Depends(get_session),
     current_user: Usuario = Depends(get_current_active_user)
-) -> List[MermaRead]:
+) -> PaginacionMermas:
     statement = select(Merma)
     # Verificar rol
     if current_user.rol == RolEnum.CAJERO:
@@ -23,8 +25,13 @@ async def obtener_mermas(
     elif (current_user.rol == RolEnum.ADMIN):
         if sucursal_id is not None:
             statement = statement.where(Merma.idSucursal == sucursal_id)
-    resultados = session.exec(statement)
-    return resultados.all()
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    resultados = session.exec(statement).all()
+    return {"total": total_records, "items": resultados}
 
 
 @router.post("", response_model=MermaRead)

@@ -1,23 +1,31 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path
-from sqlalchemy.exc import IntegrityError
+from sqlalchemy.exc import IntegrityError, func
 from sqlmodel import Session, select
 
 from backend.auth import get_current_active_user
 from backend.db import get_session
+from backend.dependencies import paginacion_comun
 from backend.models import Factura, Ticket, Usuario
-from backend.schemas import FacturaCreate, FacturaRead, FacturaUpdate
+from backend.schemas import FacturaCreate, FacturaRead, FacturaUpdate, PaginacionFacturas
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=list[FacturaRead])
+@router.get("", response_model=PaginacionFacturas)
 async def obtener_facturas(
+    paginacion: dict = Depends(paginacion_comun),
     session : Session = Depends(get_session)
-)->list[FacturaRead]:
+) -> PaginacionFacturas:
     statement = select(Factura)
-    facturas = session.exec(statement)
-    return facturas.all()
+    # Count statement
+    count_statement = select(func.count()).select_from(Factura)
+    total_records = session.exec(count_statement).one()
+
+    # Apply offset and limit
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    facturas = session.exec(statement).all()
+    return {"total": total_records, "items": facturas}
 
 
 @router.post("", response_model=FacturaRead)

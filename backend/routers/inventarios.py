@@ -1,9 +1,11 @@
 
 from fastapi import APIRouter, Depends, HTTPException
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from backend.auth import get_current_active_user
 from backend.db import get_session
+from backend.dependencies import paginacion_comun
 from backend.models import (
     Compra,
     Medicamento,
@@ -15,6 +17,7 @@ from backend.models import (
 from backend.schemas import (
     CompraCreate,
     CompraRead,
+    PaginacionInventarios,
     SurtidoRequest,
     Tabla_InventarioCreate,
     Tabla_InventarioRead,
@@ -23,11 +26,19 @@ from backend.schemas import (
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=list[Tabla_InventarioRead])
-async def obtener_inventarios(session : Session=Depends(get_session)) -> list[Tabla_InventarioRead]:
+@router.get("", response_model=PaginacionInventarios)
+async def obtener_inventarios(
+    paginacion: dict = Depends(paginacion_comun),
+    session : Session=Depends(get_session)
+) -> PaginacionInventarios:
     statement = select(Tabla_Inventario)
-    inventarios = session.exec(statement)
-    return inventarios.all()
+
+    count_statement = select(func.count()).select_from(Tabla_Inventario)
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    inventarios = session.exec(statement).all()
+    return {"total": total_records, "items": inventarios}
 
 
 @router.post("", response_model=Tabla_InventarioRead)

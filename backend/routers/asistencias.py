@@ -7,8 +7,9 @@ from sqlmodel import Session, select
 
 from backend.auth import get_current_active_user, verify_admin
 from backend.db import get_session
+from backend.dependencies import paginacion_comun
 from backend.models import Asistencia, Usuario
-from backend.schemas import AsistenciaCreate, AsistenciaRead, AsistenciaUpdate
+from backend.schemas import AsistenciaCreate, AsistenciaRead, AsistenciaUpdate, PaginacionAsistencias
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
@@ -46,15 +47,26 @@ async def registrar_asistencia(
         return asistencia
 
 
-@router.get("", response_model=list[Asistencia])
+@router.get("", response_model=PaginacionAsistencias)
 async def obtener_asistencias(
     session: Session=Depends(get_session),
+    paginacion: dict = Depends(paginacion_comun),
     current_user: Usuario = Depends(verify_admin)
-) -> list[Asistencia]:
-    statement = select(Asistencia).join(Usuario).where(Usuario.idSucursal == current_user.idSucursal)
+) -> PaginacionAsistencias:
+    statement = (
+        select(Asistencia).join(Usuario).where(Usuario.idSucursal == current_user.idSucursal)
+    )
+    # Make a statement with only columns, and counting
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one() #exec and get
+
+
+    # Aplply pagination to filtered query
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+
     resultados = session.exec(statement)
     asistencias = resultados.all()
-    return asistencias
+    return {"total": total_records, "items": asistencias}
 
 
 @router.patch("/{asistencia_id}", response_model=AsistenciaRead)
