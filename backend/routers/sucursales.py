@@ -6,29 +6,39 @@ from sqlmodel import Session, func, select
 
 from backend.auth import get_current_active_user, verify_admin
 from backend.db import get_session
+from backend.dependencies import paginacion_comun
 from backend.models import Asistencia, Compra, Sucursal, Tabla_Inventario, Ticket, Usuario
 from backend.schemas import (
-    AsistenciaRead,
-    CompraRead,
+    PaginacionAsistencias,
+    PaginacionCompras,
+    PaginacionInventarios,
+    PaginacionSucursales,
+    PaginacionUsuarios,
     SucursalCreate,
     SucursalRead,
     SucursalUpdate,
-    Tabla_InventarioRead,
     TicketRead,
     UsuarioRead,
 )
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
-@router.get("", response_model=List[Sucursal])
+@router.get("", response_model=PaginacionSucursales)
 async def obtener_sucursales(
+    paginacion: dict = Depends(paginacion_comun),
     current_user: Usuario = Depends(verify_admin),
     session: Session=Depends(get_session)
-) -> List[Sucursal]:
+) -> PaginacionSucursales:
     statement = select(Sucursal).where(Sucursal.estaActivo)
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+
     resultados = session.exec(statement)
     sucursales = resultados.all()
-    return sucursales
+    return {"total": total_records, "items": sucursales}
 
 
 @router.get("/{sucursal_id}", response_model=Sucursal)
@@ -108,72 +118,97 @@ async def obtener_usuario_sucursal(
     return usuario
 
 
-@router.get("/{sucursal_id}/usuarios", response_model=List[UsuarioRead])
+@router.get("/{sucursal_id}/usuarios", response_model=PaginacionUsuarios)
 async def obtener_usuarios_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    paginacion: dict = Depends(paginacion_comun),
     current_user: Usuario = Depends(verify_admin),
     session: Session=Depends(get_session)
-) -> List[UsuarioRead]:
+) -> PaginacionUsuarios:
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
     statement = select(Usuario).where(Usuario.idSucursal==sucursal_id) 
-    results = session.exec(statement)
-    usuarios = results.all()
-    return usuarios
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    results = session.exec(statement).all()
+    
+    return {"total": total_records, "items": results}
 
 
-@router.get("/{sucursal_id}/asistencias", response_model=List[AsistenciaRead])
+@router.get("/{sucursal_id}/asistencias", response_model=PaginacionAsistencias)
 async def obtener_asistencias_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    paginacion: dict = Depends(paginacion_comun), 
     current_user: Usuario = Depends(get_current_active_user),
     session : Session = Depends(get_session)
-) -> List[AsistenciaRead]:
+) -> PaginacionAsistencias:
     if current_user.rol=="CAJERO" and sucursal_id != current_user.idSucursal:
         raise HTTPException(status_code=403, detail="El cajero actual no puede consultar informacion de otra sucursal")
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
     statement = select(Asistencia).join(Usuario).join(Sucursal).where(Usuario.idSucursal==sucursal_id)
-    resultados = session.exec(statement)
-    return resultados.all()
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    resultados = session.exec(statement).all()
+    return {"total": total_records, "items": resultados}
 
 
-@router.get("/{sucursal_id}/compras", response_model=List[CompraRead])
+@router.get("/{sucursal_id}/compras", response_model=PaginacionCompras)
 async def obtener_compras_sucursal(
     sucursal_id:Annotated[int, Path(title="ID de la sucursal")],
+    paginacion: dict = Depends(paginacion_comun),
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
-) -> List[CompraRead]:
+) -> PaginacionCompras:
     if current_user.rol=="CAJERO" and sucursal_id != current_user.idSucursal:
         raise HTTPException(status_code=403, detail="El cajero actual no puede consultar informacion de otra sucursal")
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
     statement = select(Compra).where(Compra.idSucursal==sucursal_id)
-    compras = session.exec(statement)
-    return compras.all()
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    compras = session.exec(statement).all()
+    return {"total": total_records, "items": compras}
 
 
-@router.get("/{sucursal_id}/inventarios", response_model=List[Tabla_InventarioRead])
+@router.get("/{sucursal_id}/inventarios", response_model=PaginacionInventarios)
 async def obtener_inventarios_sucursal(
     sucursal_id : Annotated[int, Path(title="ID de la sucursal")],
+    paginacion: dict = Depends(paginacion_comun),
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
-) -> List[Tabla_InventarioRead]:
+) -> PaginacionInventarios:
     if current_user.rol=="CAJERO" and sucursal_id != current_user.idSucursal:
         raise HTTPException(status_code=403, detail="El cajero actual no puede consultar informacion de otra sucursal")
     sucursal = session.get(Sucursal, sucursal_id)
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL INDICADA, NO ENCONTRADA")
     statement = select(Tabla_Inventario).where(Tabla_Inventario.idSucursal==sucursal_id)
-    inventarios = session.exec(statement)
-    return inventarios.all()
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    inventarios = session.exec(statement).all()
+    return {"total": total_records, "items": inventarios}
 
 
 @router.get("/{sucursal_id}/tickets", response_model=List[TicketRead])
 async def obtener_tickets_sucursal(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
+    paginacion: dict = Depends(paginacion_comun),
     current_user: Usuario = Depends(get_current_active_user),
     session: Session = Depends(get_session)
 ) -> List[TicketRead]:
@@ -183,8 +218,13 @@ async def obtener_tickets_sucursal(
     if not sucursal:
         raise HTTPException(status_code=404, detail="SUCURSAL NO ENCONTRADA")
     statement = select(Ticket).where(Ticket.idSucursal==sucursal_id)
-    tickets = session.exec(statement)
-    return tickets.all()
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    tickets = session.exec(statement).all()
+    return {"total": total_records, "items": tickets}
 
 
 @router.get('/{sucursal_id}/corte-caja')
@@ -246,12 +286,13 @@ async def obtener_corte_caja(
         "corte_caja": total}
 
 
-@router.get("/{sucursal_id}/inventarios/", response_model=List[Tabla_Inventario])
+@router.get("/{sucursal_id}/inventarios/", response_model=PaginacionInventarios)
 async def obtener_inventario_por_filtro(
     sucursal_id: Annotated[int, Path(title="ID de la sucursal")],
     filtro: Optional[str] = Query(None, description="Opciones válidas: 'stock_bajo', 'por_caducar'"),
+    paginacion: dict = Depends(paginacion_comun),
     session: Session = Depends(get_session)
-) -> List[Tabla_Inventario]:
+) -> PaginacionInventarios:
     statement = select(Tabla_Inventario).where(Tabla_Inventario.idSucursal == sucursal_id)
 
     if filtro == "stock_bajo":
@@ -266,4 +307,9 @@ async def obtener_inventario_por_filtro(
     elif filtro is not None:
         # Cualquier otra cosa ingresada en el filtro genera una excepcion
         raise HTTPException(status_code=400, detail="Filtro no válido")
-    return session.exec(statement).all()
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    resultados = session.exec(statement).all()
+    return {"total": total_records, "items": resultados}

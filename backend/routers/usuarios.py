@@ -1,12 +1,20 @@
 from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Path
+from sqlalchemy import func
 from sqlmodel import Session, select
 
 from backend.auth import get_current_active_user, get_pwd_hash, verify_admin
 from backend.db import get_session
+from backend.dependencies import paginacion_comun
 from backend.models import Asistencia, Sucursal, Usuario
-from backend.schemas import AsistenciaRead, UsuarioCreate, UsuarioRead, UsuarioUpdate
+from backend.schemas import (
+    PaginacionAsistencias,
+    PaginacionUsuarios,
+    UsuarioCreate,
+    UsuarioRead,
+    UsuarioUpdate,
+)
 
 router = APIRouter(dependencies=[Depends(get_current_active_user)])
 
@@ -31,15 +39,21 @@ async def crear_usuario(
     return usuario
 
 
-@router.get("", response_model=list[UsuarioRead])
+@router.get("", response_model=PaginacionUsuarios)
 async def obtener_usuarios(
+    paginacion: dict = Depends(paginacion_comun),
     current_user: Usuario = Depends(verify_admin),
     session: Session=Depends(get_session)
-) -> list[UsuarioRead]:
+) -> PaginacionUsuarios:
     statement = select(Usuario).where(Usuario.estaActivo)
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
     resultados = session.exec(statement)
     usuarios = resultados.all()
-    return usuarios
+    return {"total": total_records, "items": usuarios}
 
 
 @router.patch("/{usuario_id}", response_model=UsuarioRead)
@@ -62,15 +76,23 @@ async def actualizar_usuario(
     return usuario
 
 
-@router.get("/{usuario_id}/asistencias", response_model=list[AsistenciaRead])
+@router.get("/{usuario_id}/asistencias", response_model=PaginacionAsistencias)
 async def obtener_asistencias_usuario(
     usuario_id: Annotated[int, Path(title="ID del usuario")],
+    paginacion: dict = Depends(paginacion_comun),
     session: Session = Depends(get_session)
-) -> list[AsistenciaRead]:
+) -> PaginacionAsistencias:
     usuario = session.get(Usuario, usuario_id)
     if not usuario:
         raise HTTPException(status_code=404, detail="USUARIO NO ENCONTRADO")
-    return session.exec(select(Asistencia).where(Asistencia.idUsuario==usuario_id)).all()
+    statement = select(Asistencia).where(Asistencia.idUsuario==usuario_id)
+
+    count_statement = statement.with_only_columns(func.count())
+    total_records = session.exec(count_statement).one()
+
+    statement = statement.offset(paginacion["skip"]).limit(paginacion["limit"])
+    resultados = session.exec(statement).all()
+    return {"total": total_records, "items": resultados}
 
 
 @router.delete("/{usuario_id}")
