@@ -281,3 +281,49 @@ class MermaRead(MermaBase):
 
 class MermaCreate(MermaBase):
     idInventario : int
+
+###############   PAGINACIONES    ###############
+class PaginacionMedicamentos(BaseModel):
+    total: int
+    items: list[MedicamentoRead]
+
+class PaginacionAsistencias(BaseModel):
+    total: int
+    items: list[AsistenciaRead]
+
+class PaginacionCompras(BaseModel):
+    total: int
+    items: list[CompraRead]
+
+class PaginacionFacturas(BaseModel):
+    total: int
+    items: list[FacturaRead]
+
+class PaginacionInventarios(BaseModel):
+    total: int
+    items: list[Tabla_InventarioRead]
+
+class PaginacionMermas(BaseModel):
+    total: int
+    items: list[MermaRead]
+
+class PaginacionProveedores(BaseModel):
+    total: int
+    items: list[ProveedorRead]
+
+class PaginacionSucursales(BaseModel):
+    total: int
+    items: list[SucursalRead]
+
+class PaginacionTickets(BaseModel):
+    total: int
+    items: list[TicketRead]
+
+class PaginacionDetallesVenta(BaseModel):
+    total: int
+    items: list[Detalle_VentaRead]
+
+class PaginacionUsuarios(BaseModel):
+    total: int
+    items: list[UsuarioRead]
+
