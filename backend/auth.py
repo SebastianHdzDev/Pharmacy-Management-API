@@ -10,8 +10,8 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
-from backend.models import RolEnum, TokenBloqueado, Usuario
 from backend.context import current_user_id
+from backend.models import RolEnum, TokenBloqueado, Usuario
 
 from .db import get_session
 
