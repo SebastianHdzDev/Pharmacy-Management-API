@@ -10,6 +10,7 @@ from passlib.context import CryptContext
 from pydantic import BaseModel
 from sqlmodel import Session, select
 
+from backend.context import current_user_id
 from backend.models import RolEnum, TokenBloqueado, Usuario
 
 from .db import get_session
@@ -95,6 +96,7 @@ def get_current_user(token:str = Depends(oauth2_scheme), db: Session = Depends(g
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED,
                 detail="Usuario no existe",
                 headers={"WWW-Authenticate":"Bearer"})
+    current_user_id.set(user.idUsuario)
     return user
 
 

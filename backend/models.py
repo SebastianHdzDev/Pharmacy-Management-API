@@ -8,6 +8,7 @@ from sqlmodel import Field, Index, Relationship, SQLModel
 
 from backend.schemas import (
     AsistenciaBase,
+    AuditoriaBase,
     CompraBase,
     Detalle_VentaBase,
     FacturaBase,
@@ -171,3 +172,11 @@ class Merma(MermaBase, table=True):
     idInventario : int = Field(foreign_key="tabla_inventario.idInventario")
     idUsuario: int = Field(foreign_key="usuario.idUsuario")
     idSucursal: int = Field(foreign_key="sucursal.idSucursal")
+
+class Auditoria(AuditoriaBase, table=True):
+    idAuditoria: int | None = Field(default=None, primary_key=True)
+    accion: str = Field(nullable=False) # 'CREAR', 'ACTUALIZAR', 'ELIMINAR'
+    tabla_afectada: str = Field(nullable=False)
+    id_registro: str = Field(nullable=False)
+    fecha_hora: datetime = Field(default_factory=datetime.utcnow, nullable=False)
+    idUsuario: int | None = Field(default=None, foreign_key="usuario.idUsuario")

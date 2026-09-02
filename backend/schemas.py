@@ -327,3 +327,13 @@ class PaginacionUsuarios(BaseModel):
     total: int
     items: list[UsuarioRead]
 
+class AuditoriaBase(SQLModel):
+    accion: str
+    tabla_afectada: str
+    id_registro: str
+
+class AuditoriaRead(AuditoriaBase):
+    idAuditoria: int
+    fecha_hora: datetime
+    idUsuario: int | None
+

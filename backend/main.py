@@ -2,6 +2,8 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+import backend.audit  # noqa: F401
+
 from .db import init_db
 from .routers import router
 
